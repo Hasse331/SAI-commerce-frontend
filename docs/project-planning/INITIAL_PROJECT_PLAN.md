@@ -6,8 +6,9 @@ By: Hans Imberg
 
 To: Spectrum Audio Instruments (SAI)
 
-Milestone 1: Public Storefront (this project plan)
-Milestone 2: Internal Systems & Tools
+- Milestone 1: Public Storefront (this project plan)
+- Milestone 2: Internal Systems & Tools
+
 (milestones specified in part 7)
 
 ---
