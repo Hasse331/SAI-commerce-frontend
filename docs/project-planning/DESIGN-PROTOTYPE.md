@@ -1,6 +1,6 @@
 # Design Prototype
 
-The initial UI prototype for the project was created using Figma.
+The initial UI prototype for the project was created using Figma make.
 
 ## Online prototype
 
@@ -11,4 +11,3 @@ https://www.figma.com/design/nKVDmJWNHJsMwzoJwCc6ps/SAI-frontend-prototype
 The full prototype source code is available in:
 
 /design-prototype/
-
