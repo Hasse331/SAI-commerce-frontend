@@ -10,4 +10,4 @@ https://www.figma.com/design/nKVDmJWNHJsMwzoJwCc6ps/SAI-frontend-prototype
 
 The full prototype source code is available in:
 
-/design-prototype/
+[design-prototype/](/design-prototype/)
