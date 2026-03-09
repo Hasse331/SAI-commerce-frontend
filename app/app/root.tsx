@@ -17,6 +17,10 @@ import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
 import {PageLayout} from './components/PageLayout';
 
+// Chakra UI related imports:
+import { Provider } from "./components/ui/provider"
+
+
 export type RootLoader = typeof loader;
 
 /**
@@ -176,9 +180,11 @@ export default function App() {
       shop={data.shop}
       consent={data.consent}
     >
-      <PageLayout {...data}>
-        <Outlet />
-      </PageLayout>
+      <Provider>
+        <PageLayout {...data}> 
+          <Outlet />
+        </PageLayout>
+      </Provider>
     </Analytics.Provider>
   );
 }
