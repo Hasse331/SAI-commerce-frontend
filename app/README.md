@@ -39,7 +39,7 @@ npm run build
 
 ## Local development
 
-To run the dev server you need .shopify/project.json "secrets", which includes you shopify shop/backend information.
+To run the dev server you need .shopify/project.json secrets, which includes you shopify shop/backend information.
 
 ```bash
 npm run dev
