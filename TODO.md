@@ -1,3 +1,4 @@
-- Make the theming system consistent -> one theming system
-- Make the initial theme
-- Start building
+
+ - Get a clever AI assistant helper in the vs code
+ - Figure out how to connect components to the theme
+ - Understand the project structure

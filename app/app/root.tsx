@@ -18,8 +18,7 @@ import appStyles from '~/styles/app.css?url';
 import {PageLayout} from './components/PageLayout';
 
 // Chakra UI related imports:
-import { Provider } from "./components/ui/provider"
-
+import {Provider} from './components/ui/provider';
 
 export type RootLoader = typeof loader;
 
@@ -181,7 +180,7 @@ export default function App() {
       consent={data.consent}
     >
       <Provider>
-        <PageLayout {...data}> 
+        <PageLayout {...data}>
           <Outlet />
         </PageLayout>
       </Provider>
