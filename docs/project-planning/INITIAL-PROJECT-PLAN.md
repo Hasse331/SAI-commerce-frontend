@@ -41,9 +41,11 @@ After evaluating multiple approaches (fully self-hosted, open-source commerce st
 
 ### Frontend
 
-- Hydrogen (React-based framework by Shopify)
-- TypeScript-based implementation
-- Leveraging shopify API:s for data and selected e-commerce UI components
+Initially tried the Shopify Hydrogen stack, but its skeleton is tightly coupled across components, making it non-modular and difficult to change/maintain. React Router nested routes and cross-dependent components made modifications risky, and the styling system relied on vanilla CSS, which would conflict with a modern theme-aware system like Chakra UI. For these reasons, a custom Next.js stack was chosen.
+
+- Next.js
+- TypeScript
+- Leveraging shopify API:s and metaobjects for data and selected e-commerce UI components
 - Custom UI components & component libraries if needed (Chakra UI etc)
 
 ### DevOps
