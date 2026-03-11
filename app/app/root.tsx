@@ -13,8 +13,6 @@ import {
 import type {Route} from './+types/root';
 import favicon from '~/assets/favicon.svg';
 import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
-import resetStyles from '~/styles/reset.css?url';
-import appStyles from '~/styles/app.css?url';
 import {PageLayout} from './components/PageLayout';
 
 // Chakra UI related imports:
@@ -152,9 +150,6 @@ export function Layout({children}: {children?: React.ReactNode}) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
-        {/* Removed the default CSS styling: */}
-        {/* <link rel="stylesheet" href={resetStyles}></link> */}
-        {/* <link rel="stylesheet" href={appStyles}></link> */}
         <Meta />
         <Links />
       </head>
