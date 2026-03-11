@@ -152,8 +152,9 @@ export function Layout({children}: {children?: React.ReactNode}) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <link rel="stylesheet" href={resetStyles}></link>
-        <link rel="stylesheet" href={appStyles}></link>
+        {/* Removed the default CSS styling: */}
+        {/* <link rel="stylesheet" href={resetStyles}></link> */}
+        {/* <link rel="stylesheet" href={appStyles}></link> */}
         <Meta />
         <Links />
       </head>
@@ -179,6 +180,7 @@ export default function App() {
       shop={data.shop}
       consent={data.consent}
     >
+      {/* Chakra UI provider: */}
       <Provider>
         <PageLayout {...data}>
           <Outlet />
