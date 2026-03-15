@@ -39,11 +39,11 @@ export default function Header() {
     <Box>
       <Container>
         <Flex h={16} alignItems="center" justifyContent="space-between">
-          <Stack>
+          <Link href="/">
             <Text padding={0} fontWeight="bold" fontSize="xl">
               {brandData.name}
             </Text>
-          </Stack>
+          </Link>
 
           <HStack padding={8} alignItems="center">
             <HStack as="nav" padding={4} display={{ base: "none", md: "flex" }}>
