@@ -3,6 +3,8 @@ import { productBasicMockData } from "@/data/mock/products/product-basic";
 import {
   getDetailPageProductHandles,
   getDetailPageSpecs,
+  getMetaobjectFields,
+  mapPageSeo,
   mapProductBasicToListItem,
   mapProductsPageItems,
   mapTextContentBlockReference,
@@ -15,6 +17,7 @@ import {
   productsPageFieldKeys,
   shopifyPageMetaobjects,
 } from "@/data/shopify/metaobjects/pages";
+import { seoMetaobjectFieldKeys } from "@/data/shopify/metaobjects/seo";
 
 const productsPageQuery = `
   query ProductsPageMetaobject($type: String!, $handle: String!) {
@@ -155,6 +158,9 @@ async function getShopifyProductsPageData(): Promise<ProductsPageData> {
   const detailPageSpecs = getDetailPageSpecs(data.detailPages.nodes);
 
   return {
+    seo: mapPageSeo(
+      getMetaobjectFields(data.metaobject.fields, seoMetaobjectFieldKeys.reference),
+    ),
     textContentBlock: mapTextContentBlockReference(
       introField,
       productsPageIntroMockData,

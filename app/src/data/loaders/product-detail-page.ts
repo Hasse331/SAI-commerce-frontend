@@ -2,7 +2,9 @@ import { productBasicDataBySlug } from "@/data/mock/products/product-basic";
 import { productCustomizationCardDataBySlug } from "@/data/mock/products/customization-card";
 import { productPageDataBySlug } from "@/data/mock/products/product-page";
 import {
+  getMetaobjectFields,
   getReferencedProductFromDetailPage,
+  mapPageSeo,
   mapProductDetailsMetaobject,
   mapStorefrontProductToListItem,
 } from "@/data/mappers";
@@ -13,6 +15,7 @@ import type {
 import { isShopifyDataSource } from "@/data/source";
 import type { ProductDetailPageData } from "@/types/products";
 import { shopifyPageMetaobjects } from "@/data/shopify/metaobjects/pages";
+import { seoMetaobjectFieldKeys } from "@/data/shopify/metaobjects/seo";
 
 const ctaLabel = "Buy";
 
@@ -154,6 +157,9 @@ async function getShopifyProductDetailPageData(
   const product = mapStorefrontProductToListItem(productReference, true);
 
   return {
+    seo: mapPageSeo(
+      getMetaobjectFields(detailPage.fields, seoMetaobjectFieldKeys.reference),
+    ),
     product,
     detail: mapProductDetailsMetaobject(detailPage, product),
     customization: undefined,

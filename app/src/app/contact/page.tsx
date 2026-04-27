@@ -2,14 +2,19 @@ import type { Metadata } from "next";
 import { Container, Stack } from "@chakra-ui/react";
 import { ContactMethodsCard } from "@/components/page-components/contact/contact-methods-card";
 import { getContactPageData } from "@/data/loaders/contact-page";
-import { buildPageTitle, createDescription, createMetadata } from "@/lib/seo";
+import { buildPageTitle, createMetadata, resolvePageSeo } from "@/lib/seo";
 
 export async function generateMetadata(): Promise<Metadata> {
   const contactPageData = await getContactPageData();
+  const seo = resolvePageSeo({
+    seo: contactPageData.seo,
+    fallbackTitle: buildPageTitle(contactPageData.title || "Contact"),
+    fallbackDescriptionParts: [contactPageData.title, contactPageData.intro],
+  });
 
   return createMetadata({
-    title: buildPageTitle("Contact"),
-    description: createDescription(contactPageData.title, contactPageData.intro),
+    title: seo.title,
+    description: seo.description,
     path: "/contact",
   });
 }

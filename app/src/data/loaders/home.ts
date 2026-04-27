@@ -3,6 +3,7 @@ import {
   getMetaobjectFields,
   mapContentBoxes,
   mapMediaImageReference,
+  mapPageSeo,
   mapProcessSteps,
   mapQuote,
   mapTextContentBlockFields,
@@ -26,6 +27,7 @@ import {
   shopifyPageMetaobjects,
 } from "../shopify/metaobjects/pages";
 import { homeContentBoxesMockData, homeIntroMockData, homeLargeImageMockData, homeProcessStepsMockData, homeQuoteMockData } from "../mock/home-page";
+import { seoMetaobjectFieldKeys } from "../shopify/metaobjects/seo";
 
 interface ShopifyHomePageQueryData {
   metaobjects: {
@@ -135,6 +137,7 @@ async function getShopifyHomePageData(): Promise<HomePageData> {
   const fields = homePage.fields;
 
   return {
+    seo: mapPageSeo(getMetaobjectFields(fields, seoMetaobjectFieldKeys.reference)),
     hero: {
       title: brand.name,
       subtitle: brand.slogan,

@@ -1,3 +1,5 @@
+import type { PageSeo } from "@/types/seo";
+
 export interface ProductSpecItem {
   label: string;
   value: string;
@@ -30,6 +32,7 @@ export interface ProductsTextContentBlockData {
 }
 
 export interface ProductsPageData {
+  seo?: PageSeo;
   textContentBlock: ProductsTextContentBlockData;
   items: ProductSummary[];
 }
@@ -81,6 +84,7 @@ export interface ProductDetailContentData {
 }
 
 export interface ProductDetailPageData {
+  seo?: PageSeo;
   product: ProductSummary;
   detail: ProductDetailContentData;
   customization?: ProductCustomizationSectionData;

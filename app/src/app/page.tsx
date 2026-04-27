@@ -12,20 +12,25 @@ import {
   hasQuoteContent,
   hasTextContentBlockContent,
 } from "@/data/predicates";
-import { buildPageTitle, createDescription, createMetadata } from "@/lib/seo";
+import { buildPageTitle, createMetadata, resolvePageSeo } from "@/lib/seo";
 import { Container, Separator } from "@chakra-ui/react";
 
 export async function generateMetadata(): Promise<Metadata> {
   const brand = await getBrandData();
   const homePageData = await getHomePageData();
-
-  return createMetadata({
-    title: buildPageTitle(),
-    description: createDescription(
+  const seo = resolvePageSeo({
+    seo: homePageData.seo,
+    fallbackTitle: buildPageTitle(),
+    fallbackDescriptionParts: [
       homePageData.hero.subtitle,
       homePageData.textContentBlock1.text1,
       brand.slogan,
-    ),
+    ],
+  });
+
+  return createMetadata({
+    title: seo.title,
+    description: seo.description,
     path: "/",
     image:
       homePageData.largeImage?.src ||

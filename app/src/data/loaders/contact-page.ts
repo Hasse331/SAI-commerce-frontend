@@ -1,7 +1,7 @@
 import { contactPageIntroData } from "@/data/contents/contact-page-intro";
 import { isShopifyDataSource } from "@/data/source";
 import type { ContactPageData } from "@/types/contact";
-import { getContactMethodsData } from "./contact-methods";
+import { getSharedContactData } from "./contact-methods";
 
 export async function getContactPageData(): Promise<ContactPageData> {
   if (isShopifyDataSource()) {
@@ -16,8 +16,11 @@ function getContactPageIntroData(): ContactPageData {
 }
 
 async function getShopifyContactPageData(): Promise<ContactPageData> {
+  const sharedContactData = await getSharedContactData();
+
   return {
     ...getContactPageIntroData(),
-    contactMethods: await getContactMethodsData(),
+    contactMethods: sharedContactData.contactMethods,
+    seo: sharedContactData.seo,
   };
 }

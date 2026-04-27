@@ -11,7 +11,7 @@ import { KeySpecs } from "@/components/page-components/product-details/key-specs
 import { LargeImage } from "@/components/page-components/product-details/large-image";
 import { getProductDetailPageData } from "@/data/loaders/product-detail-page";
 import { TextContentBlock } from "@/components/page-components/shared/text-content-block";
-import { buildPageTitle, createDescription, createMetadata } from "@/lib/seo";
+import { buildPageTitle, createMetadata, resolvePageSeo } from "@/lib/seo";
 
 interface ProductDetailRouteProps {
   params: Promise<{
@@ -34,13 +34,19 @@ export async function generateMetadata({
     });
   }
 
-  return createMetadata({
-    title: buildPageTitle(data.product.title),
-    description: createDescription(
+  const seo = resolvePageSeo({
+    seo: data.seo,
+    fallbackTitle: buildPageTitle(data.product.title),
+    fallbackDescriptionParts: [
       data.product.subtitle,
       data.product.description,
       data.detail.textContentBlock?.text1,
-    ),
+    ],
+  });
+
+  return createMetadata({
+    title: seo.title,
+    description: seo.description,
     path: `/products/${data.product.slug}`,
     image: data.detail.heroImage.src || data.product.image.src,
   });

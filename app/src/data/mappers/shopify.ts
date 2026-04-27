@@ -4,6 +4,8 @@ import type {
   ShopifyReference,
   ShopifyScalarMetaobjectField,
 } from "@/types/shopify";
+import type { PageSeo } from "@/types/seo";
+import { seoMetaobjectFieldKeys } from "@/data/shopify/metaobjects/seo";
 
 export function getMetaobjectTextValue(
   fields: Array<{
@@ -13,6 +15,29 @@ export function getMetaobjectTextValue(
   key: string,
 ): string | undefined {
   return fields.find((field) => field.key === key)?.value ?? undefined;
+}
+
+export function mapPageSeo(
+  fields: ShopifyScalarMetaobjectField[] | undefined,
+): PageSeo | undefined {
+  if (!fields?.length) {
+    return undefined;
+  }
+
+  const title = getMetaobjectTextValue(fields, seoMetaobjectFieldKeys.title)?.trim();
+  const description = getMetaobjectTextValue(
+    fields,
+    seoMetaobjectFieldKeys.description,
+  )?.trim();
+
+  if (!title && !description) {
+    return undefined;
+  }
+
+  return {
+    title: title || undefined,
+    description: description || undefined,
+  };
 }
 
 export function parseStringList(value: string | undefined): string[] {

@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
+import type { PageSeo } from "../types/seo";
 
 const defaultSiteName = "Spectrum Audio Instruments";
 const defaultDescription =
   "Handcrafted audio instruments, studio hardware, and workshop notes from Spectrum Audio Instruments.";
 const defaultOgImage = "/logo_horizontal.png";
+export const SEO_TITLE_MAX_LENGTH = 55;
+export const SEO_DESCRIPTION_MAX_LENGTH = 150;
 
 export function getSiteUrl(): URL {
   const rawUrl =
@@ -42,15 +45,82 @@ export function buildPageTitle(pageTitle?: string): string {
   return pageTitle ? `${pageTitle} | ${defaultSiteName}` : defaultSiteName;
 }
 
+function normalizeText(value?: string): string | undefined {
+  const normalized = value?.replace(/\s+/g, " ").trim();
+
+  return normalized || undefined;
+}
+
+function trimToLength(value: string, maxLength: number): string {
+  if (value.length <= maxLength) {
+    return value;
+  }
+
+  const sliced = value.slice(0, maxLength + 1).trim();
+  const lastSpaceIndex = sliced.lastIndexOf(" ");
+
+  if (lastSpaceIndex > Math.floor(maxLength * 0.6)) {
+    return sliced.slice(0, lastSpaceIndex).trim();
+  }
+
+  return sliced.slice(0, maxLength).trim();
+}
+
+export function createTitle(...parts: Array<string | undefined>): string {
+  const title = parts
+    .map((part) => normalizeText(part))
+    .filter(Boolean)
+    .join(" | ");
+
+  return title || defaultSiteName;
+}
+
 export function createDescription(...parts: Array<string | undefined>): string {
   const description = parts
-    .map((part) => part?.trim())
+    .map((part) => normalizeText(part))
     .filter(Boolean)
     .join(" ")
-    .replace(/\s+/g, " ")
-    .trim();
 
   return description || defaultDescription;
+}
+
+export function clampSeoTitle(title?: string): string {
+  return trimToLength(normalizeText(title) || defaultSiteName, SEO_TITLE_MAX_LENGTH);
+}
+
+export function clampSeoDescription(description?: string): string {
+  return trimToLength(
+    normalizeText(description) || defaultDescription,
+    SEO_DESCRIPTION_MAX_LENGTH,
+  );
+}
+
+export function resolvePageSeo({
+  seo,
+  fallbackTitle,
+  fallbackTitleParts = [],
+  fallbackDescription,
+  fallbackDescriptionParts = [],
+}: {
+  seo?: PageSeo;
+  fallbackTitle?: string;
+  fallbackTitleParts?: Array<string | undefined>;
+  fallbackDescription?: string;
+  fallbackDescriptionParts?: Array<string | undefined>;
+}): Required<PageSeo> {
+  const resolvedTitle =
+    normalizeText(seo?.title) ||
+    normalizeText(fallbackTitle) ||
+    createTitle(...fallbackTitleParts);
+  const resolvedDescription =
+    normalizeText(seo?.description) ||
+    normalizeText(fallbackDescription) ||
+    createDescription(...fallbackDescriptionParts);
+
+  return {
+    title: clampSeoTitle(resolvedTitle),
+    description: clampSeoDescription(resolvedDescription),
+  };
 }
 
 export function createMetadata({

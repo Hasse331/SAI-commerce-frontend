@@ -1,21 +1,26 @@
 import type { ContactMethod } from "@/types/contact";
+import type { PageSeo } from "@/types/seo";
 import { isShopifyDataSource } from "../source";
 import { contactMethodsFallbackData } from "../fallback/contact-fallback";
 import { storefrontQuery } from "../shopify/storefront-client";
-import { getMetaobjectTextValue } from "../mappers";
+import { getMetaobjectFields, getMetaobjectTextValue, mapPageSeo } from "../mappers";
 import { normalizeContactMethods } from "../predicates";
 import {
   contactFieldKeys,
   shopifySharedMetaobjects,
 } from "../shopify/metaobjects/shared";
+import { seoMetaobjectFieldKeys } from "../shopify/metaobjects/seo";
+import type { ShopifyMetaobjectField } from "@/types/shopify";
 
 interface ShopifySharedContactQueryData {
   metaobject: {
-    fields: Array<{
-      key: string;
-      value: string | null;
-    }>;
+    fields: ShopifyMetaobjectField[];
   } | null;
+}
+
+export interface SharedContactData {
+  contactMethods: ContactMethod[];
+  seo?: PageSeo;
 }
 
 const sharedContactQuery = `
@@ -24,14 +29,31 @@ const sharedContactQuery = `
       fields {
         key
         value
+        type
+        reference {
+          __typename
+          ... on Metaobject {
+            fields {
+              key
+              value
+              type
+            }
+          }
+        }
       }
     }
   }
 `;
 
 export async function getContactMethodsData(): Promise<ContactMethod[]> {
+  return (await getSharedContactData()).contactMethods;
+}
+
+export async function getSharedContactData(): Promise<SharedContactData> {
   if (!isShopifyDataSource()) {
-    return normalizeContactMethods(contactMethodsFallbackData);
+    return {
+      contactMethods: normalizeContactMethods(contactMethodsFallbackData),
+    };
   }
 
   const data = await storefrontQuery<ShopifySharedContactQueryData>(
@@ -42,7 +64,9 @@ export async function getContactMethodsData(): Promise<ContactMethod[]> {
   );
 
   if (!data.metaobject) {
-    return normalizeContactMethods(contactMethodsFallbackData);
+    return {
+      contactMethods: normalizeContactMethods(contactMethodsFallbackData),
+    };
   }
 
   const email = getMetaobjectTextValue(data.metaobject.fields, contactFieldKeys.email);
@@ -78,7 +102,13 @@ export async function getContactMethodsData(): Promise<ContactMethod[]> {
     });
   }
 
-  return items.length > 0
-    ? normalizeContactMethods(items)
-    : normalizeContactMethods(contactMethodsFallbackData);
+  return {
+    contactMethods:
+      items.length > 0
+        ? normalizeContactMethods(items)
+        : normalizeContactMethods(contactMethodsFallbackData),
+    seo: mapPageSeo(
+      getMetaobjectFields(data.metaobject.fields, seoMetaobjectFieldKeys.reference),
+    ),
+  };
 }
