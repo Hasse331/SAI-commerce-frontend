@@ -15,6 +15,7 @@ import { CartSidebar } from "@/components/cart/cart-sidebar";
 import { hasArticlesContent } from "@/data/loaders/articles";
 import { getBrandData } from "@/data/loaders/brand-loader";
 import { getFixloopProjectName } from "@/lib/fixloop/env";
+import { hasFixloopEnabled } from "@/lib/fixloop/env";
 import { buildPageTitle, getMetadataBase, isProductionSite } from "@/lib/seo";
 
 const geistSans = Geist({
@@ -101,6 +102,7 @@ export default async function RootLayout({
   const hasArticles = await hasArticlesContent();
   const brand = await getBrandData();
   const fixloopProjectName = getFixloopProjectName();
+  const hasFixloop = hasFixloopEnabled();
   const shell = (
     <Provider>
       <Box
@@ -120,12 +122,12 @@ export default async function RootLayout({
           <Separator />
           <Footer
             brand={brand}
-            showReportProblemButton={Boolean(fixloopProjectName)}
+            showReportProblemButton={hasFixloop}
           />
           <CartSidebar />
         </CartProvider>
       </Box>
-      {fixloopProjectName ? <ReportProblemModal /> : null}
+      {hasFixloop ? <ReportProblemModal /> : null}
     </Provider>
   );
 
@@ -134,7 +136,7 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${playfairDisplay.variable}`}
       >
-        {fixloopProjectName ? (
+        {hasFixloop && fixloopProjectName ? (
           <AgenticFixLoopProvider projectName={fixloopProjectName}>
             {shell}
           </AgenticFixLoopProvider>
