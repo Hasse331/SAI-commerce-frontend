@@ -39,7 +39,10 @@ export async function generateMetadata(): Promise<Metadata> {
     title: seo.title,
     description: seo.description,
     path: "/",
-    image: metadataImage || homePageData.hero.backgroundImage || "/logo_horizontal.png",
+    image:
+      metadataImage ||
+      homePageData.hero.backgroundImage ||
+      "/logo_horizontal.png",
   });
 }
 
@@ -72,19 +75,22 @@ export default async function Home() {
         {hasTextContentBlock1 ? (
           <TextContentBlock {...homePageData.textContentBlock1} />
         ) : null}
-        {hasContentBoxes ? <ContentBoxes items={homePageData.contentBoxes} /> : null}
-        {hasLargeMedia1 ? <Separator /> : null}
-
-        {hasLargeMedia1 ? (
-          <LargeMediaSection media={largeMedia1} />
+        {hasContentBoxes ? (
+          <ContentBoxes items={homePageData.contentBoxes} />
         ) : null}
-        {hasTextContentBlock2 || hasLargeMedia2 || hasProcessSteps ? <Separator /> : null}
+        {hasLargeMedia1 ? <Separator mt={8} /> : null}
+
+        {hasLargeMedia1 ? <LargeMediaSection media={largeMedia1} /> : null}
+        {hasTextContentBlock2 || hasLargeMedia2 || hasProcessSteps ? (
+          <Separator />
+        ) : null}
         {hasTextContentBlock2 ? (
           <TextContentBlock {...homePageData.textContentBlock2} />
         ) : null}
         {hasLargeMedia2 ? <LargeMediaSection media={largeMedia2} /> : null}
-        {hasLargeMedia2 && hasProcessSteps ? <Separator /> : null}
-        {hasProcessSteps ? <ProcessSteps steps={homePageData.processSteps} /> : null}
+        {hasProcessSteps ? (
+          <ProcessSteps steps={homePageData.processSteps} />
+        ) : null}
         {hasQuote ? <Separator /> : null}
         {hasQuote ? <QuoteBlock data={homePageData.quote} /> : null}
       </Container>

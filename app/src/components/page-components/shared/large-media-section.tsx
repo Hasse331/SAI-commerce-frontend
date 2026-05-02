@@ -13,37 +13,45 @@ export function LargeMediaSection({ media }: LargeMediaSectionProps) {
   return (
     <Box
       as="section"
-      rounded="3xl"
-      p={{ base: 6, md: 10 }}
-      minH={{ base: "340px", md: "560px" }}
+      w="100vw"
+      maxW="100vw"
+      marginInline="calc(50% - 50vw)"
+      rounded="none"
+      p={0}
       display="flex"
       alignItems="center"
       justifyContent="center"
+      overflow="hidden"
     >
       {media.type === "image" ? (
         <Image
           src={media.src}
           alt={media.alt}
           w="full"
-          h="full"
-          maxH={{ base: "320px", md: "540px" }}
+          h="auto"
+          display="block"
+          maxH={{ base: "none", md: "80vh" }}
           objectFit="contain"
         />
       ) : (
         <video
-          src={media.src}
           poster={media.poster}
           aria-label={media.alt}
-          controls
+          autoPlay
+          loop
+          muted
           playsInline
           preload="metadata"
           style={{
             width: "100%",
-            height: "100%",
-            maxHeight: "540px",
+            height: "auto",
+            display: "block",
+            maxHeight: "80vh",
             objectFit: "contain",
           }}
-        />
+        >
+          <source src={media.src} type={media.mimeType} />
+        </video>
       )}
     </Box>
   );
