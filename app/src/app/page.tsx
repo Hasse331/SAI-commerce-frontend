@@ -78,11 +78,11 @@ export default async function Home() {
         {hasContentBoxes ? (
           <ContentBoxes items={homePageData.contentBoxes} />
         ) : null}
-        {hasLargeMedia1 ? <Separator mt={8} /> : null}
+        {hasLargeMedia1 ? <Separator mt={10} mb={14} /> : null}
 
         {hasLargeMedia1 ? <LargeMediaSection media={largeMedia1} /> : null}
         {hasTextContentBlock2 || hasLargeMedia2 || hasProcessSteps ? (
-          <Separator />
+          <Separator mt={14} />
         ) : null}
         {hasTextContentBlock2 ? (
           <TextContentBlock {...homePageData.textContentBlock2} />
