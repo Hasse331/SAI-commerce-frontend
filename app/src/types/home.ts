@@ -3,7 +3,7 @@ import type { ProcessStepItem } from "@/components/page-components/home/process-
 import type { QuoteBlockData } from "@/components/page-components/home/quote-block";
 import type { PageSeo } from "@/types/seo";
 import type {
-  ProductImageAsset,
+  ProductMediaAsset,
   ProductsTextContentBlockData,
 } from "@/types/products";
 
@@ -22,8 +22,9 @@ export interface HomePageData {
   hero: HomeHeroData;
   textContentBlock1: ProductsTextContentBlockData;
   contentBoxes: ContentBoxItem[];
-  largeImage?: ProductImageAsset;
+  largeMedia1?: ProductMediaAsset;
   textContentBlock2: ProductsTextContentBlockData;
+  largeMedia2?: ProductMediaAsset;
   processSteps: ProcessStepItem[];
   quote: QuoteBlockData;
 }

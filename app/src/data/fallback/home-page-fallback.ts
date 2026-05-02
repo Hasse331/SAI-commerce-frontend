@@ -3,8 +3,8 @@ import type { ProcessStepItem } from "@/components/page-components/home/process-
 import type { QuoteBlockData } from "@/components/page-components/home/quote-block";
 import type { HomeHeroData } from "@/types/home";
 import type {
+  ProductMediaAsset,
   ProductsTextContentBlockData,
-  ProductImageAsset,
 } from "@/types/products";
 import { homeHeroCtaContent } from "@/data/contents/home-hero-cta";
 
@@ -27,8 +27,16 @@ export const homeTextContentBlock1FallbackData: ProductsTextContentBlockData = {
 // contentBoxes: ContentBoxItem[]
 export const homeContentBoxesFallbackData: ContentBoxItem[] = [];
 
-// largeImage?: ProductImageAsset
-export const homeLargeImageFallbackData: ProductImageAsset = {
+// largeMedia1?: ProductMediaAsset
+export const homeLargeMedia1FallbackData: ProductMediaAsset = {
+  type: "image",
+  src: "",
+  alt: "",
+};
+
+// largeMedia2?: ProductMediaAsset
+export const homeLargeMedia2FallbackData: ProductMediaAsset = {
+  type: "image",
   src: "",
   alt: "",
 };
