@@ -1,5 +1,8 @@
-import { Box, Heading, Stack, Text } from "@chakra-ui/react";
+import { Box, Heading, HStack, Stack, Text } from "@chakra-ui/react";
 import type { ContactPageData } from "@/types/contact";
+import {
+  ContactEyebrowIndicator,
+} from "./contact-eyebrow-indicator";
 
 interface ContactMethodsCardProps {
   eyebrow: string;
@@ -16,15 +19,17 @@ export function ContactMethodsCard({
 }: ContactMethodsCardProps) {
   return (
     <Box borderWidth="1px" rounded="lg" p={6}>
-      <Text
-        fontSize="sm"
-        fontWeight="semibold"
-        color="accentBright"
-        textTransform="uppercase"
-        mb={3}
-      >
-        {eyebrow}
-      </Text>
+      <HStack gap={2} align="center" mb={3}>
+        <ContactEyebrowIndicator />
+        <Text
+          fontSize="sm"
+          fontWeight="semibold"
+          color="accentBright"
+          textTransform="uppercase"
+        >
+          {eyebrow}
+        </Text>
+      </HStack>
       <Heading as="h1" size="2xl" mb={4}>
         {title}
       </Heading>
