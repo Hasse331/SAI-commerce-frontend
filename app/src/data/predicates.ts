@@ -1,6 +1,10 @@
 import type { QuoteBlockData } from "@/components/page-components/home/quote-block";
 import type { ContactMethod } from "@/types/contact";
-import type { ProductImageAsset, ProductsTextContentBlockData } from "@/types/products";
+import type {
+  ProductImageAsset,
+  ProductMediaAsset,
+  ProductsTextContentBlockData,
+} from "@/types/products";
 
 export function hasTextContentBlockContent(
   block: ProductsTextContentBlockData | undefined,
@@ -18,6 +22,12 @@ export function hasImageAsset(
   image: ProductImageAsset | undefined,
 ): image is ProductImageAsset {
   return Boolean(image?.src);
+}
+
+export function hasMediaAsset(
+  media: ProductMediaAsset | undefined,
+): media is ProductMediaAsset {
+  return Boolean(media?.src);
 }
 
 export function hasQuoteContent(data: QuoteBlockData | undefined): boolean {

@@ -13,6 +13,20 @@ export interface ShopifyMediaImageReference {
   } | null;
 }
 
+export interface ShopifyVideoReference {
+  __typename: "Video";
+  alt: string | null;
+  previewImage: {
+    url: string;
+    altText: string | null;
+  } | null;
+  sources: Array<{
+    url: string;
+    mimeType: string | null;
+    format: string | null;
+  }>;
+}
+
 export interface ShopifyProductReference {
   __typename: "Product";
   id?: string;
@@ -28,8 +42,12 @@ export interface ShopifyMetaobjectReference {
   fields: ShopifyScalarMetaobjectField[];
 }
 
-export type ShopifyReference =
+export type ShopifyMediaReference =
   | ShopifyMediaImageReference
+  | ShopifyVideoReference;
+
+export type ShopifyReference =
+  | ShopifyMediaReference
   | ShopifyMetaobjectReference
   | ShopifyProductReference;
 

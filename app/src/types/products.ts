@@ -10,6 +10,18 @@ export interface ProductImageAsset {
   alt: string;
 }
 
+export interface ProductVideoAsset {
+  type: "video";
+  src: string;
+  alt: string;
+  poster?: string;
+  mimeType?: string;
+}
+
+export type ProductMediaAsset =
+  | ({ type: "image" } & ProductImageAsset)
+  | ProductVideoAsset;
+
 export interface ProductSummary {
   slug: string;
   hasDetails: boolean;

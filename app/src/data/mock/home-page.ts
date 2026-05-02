@@ -75,6 +75,13 @@ export const homeQuoteMockData: QuoteBlockData = {
 };
 
 export const homeLargeImageMockData = {
+  type: "image" as const,
   src: "/hero-bg.jpg",
   alt: "Workshop image",
+};
+
+export const homeLargeImage2MockData = {
+  type: "image" as const,
+  src: "/hero-bg.jpg",
+  alt: "Workshop detail image",
 };

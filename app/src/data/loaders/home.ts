@@ -1,7 +1,9 @@
 import {
   getMediaImageReference,
+  getMediaReference,
   getMetaobjectFields,
   mapContentBoxes,
+  mapMediaReference,
   mapMediaImageReference,
   mapPageSeo,
   mapProcessSteps,
@@ -15,7 +17,8 @@ import type { HomePageData } from "@/types/home";
 import { homeHeroCtaContent } from "../contents/home-hero-cta";
 import {
   homeContentBoxesFallbackData,
-  homeLargeImageFallbackData,
+  homeLargeMedia1FallbackData,
+  homeLargeMedia2FallbackData,
   homeProcessStepsFallbackData,
   homeQuoteFallbackData,
   homeTextContentBlock1FallbackData,
@@ -26,7 +29,14 @@ import {
   homePageFieldKeys,
   shopifyPageMetaobjects,
 } from "../shopify/metaobjects/pages";
-import { homeContentBoxesMockData, homeIntroMockData, homeLargeImageMockData, homeProcessStepsMockData, homeQuoteMockData } from "../mock/home-page";
+import {
+  homeContentBoxesMockData,
+  homeIntroMockData,
+  homeLargeImage2MockData,
+  homeLargeImageMockData,
+  homeProcessStepsMockData,
+  homeQuoteMockData,
+} from "../mock/home-page";
 import { seoMetaobjectFieldKeys } from "../shopify/metaobjects/seo";
 
 interface ShopifyHomePageQueryData {
@@ -73,6 +83,18 @@ const homePageQuery = `
                 altText
               }
             }
+            ... on Video {
+              alt
+              previewImage {
+                url
+                altText
+              }
+              sources {
+                url
+                mimeType
+                format
+              }
+            }
           }
         }
       }
@@ -99,8 +121,9 @@ function getMockHomePageData(
     },
     textContentBlock1: homeIntroMockData,
     contentBoxes: homeContentBoxesMockData,
-    largeImage: homeLargeImageMockData,
+    largeMedia1: homeLargeImageMockData,
     textContentBlock2: homeIntroMockData,
+    largeMedia2: homeLargeImage2MockData,
     processSteps: homeProcessStepsMockData,
     quote: homeQuoteMockData,
   };
@@ -117,8 +140,9 @@ function getFallbackHomePageData(
     },
     textContentBlock1: homeTextContentBlock1FallbackData,
     contentBoxes: homeContentBoxesFallbackData,
-    largeImage: homeLargeImageFallbackData,
+    largeMedia1: homeLargeMedia1FallbackData,
     textContentBlock2: homeTextContentBlock2FallbackData,
+    largeMedia2: homeLargeMedia2FallbackData,
     processSteps: homeProcessStepsFallbackData,
     quote: homeQuoteFallbackData,
   };
@@ -157,16 +181,21 @@ async function getShopifyHomePageData(): Promise<HomePageData> {
       getMetaobjectFields(fields, homePageFieldKeys.contentBoxes),
       fallback.contentBoxes,
     ),
-    largeImage:
-      mapMediaImageReference(
-        getMediaImageReference(fields, homePageFieldKeys.largeImage),
-        "Home large image",
-      ) || fallback.largeImage,
+    largeMedia1:
+      mapMediaReference(
+        getMediaReference(fields, homePageFieldKeys.largeMedia1),
+        "Home large media 1",
+      ) || fallback.largeMedia1,
     textContentBlock2:
       mapTextContentBlockFields(
         getMetaobjectFields(fields, homePageFieldKeys.textContent2),
         fallback.textContentBlock2,
       ) ?? fallback.textContentBlock2,
+    largeMedia2:
+      mapMediaReference(
+        getMediaReference(fields, homePageFieldKeys.largeMedia2),
+        "Home large media 2",
+      ) || fallback.largeMedia2,
     processSteps: mapProcessSteps(
       getMetaobjectFields(fields, homePageFieldKeys.processSteps),
       fallback.processSteps,

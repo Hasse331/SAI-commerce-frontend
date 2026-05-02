@@ -15,8 +15,9 @@ export const homePageFieldKeys = {
   heroImage: ["hero_image", "hero-image"],
   textContent1: ["text_content_block_1", "text-content-block-1"],
   contentBoxes: ["content_boxes", "content-boxes"],
-  largeImage: ["large_image", "large-image"],
+  largeMedia1: ["large_media_1", "large-media-1"],
   textContent2: ["text_content_block_2", "text-content-block-2"],
+  largeMedia2: ["large_media_2", "large-media-2"],
   processSteps: ["process_steps", "process-steps"],
   quote: ["quote"],
 } as const;

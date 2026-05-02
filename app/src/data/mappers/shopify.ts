@@ -1,5 +1,6 @@
 import type {
   ShopifyMediaImageReference,
+  ShopifyMediaReference,
   ShopifyMetaobjectField,
   ShopifyReference,
   ShopifyScalarMetaobjectField,
@@ -85,6 +86,22 @@ export function getMediaImageReference(
   const reference = getFieldReference(fields, keys);
 
   if (!reference || reference.__typename !== "MediaImage") {
+    return undefined;
+  }
+
+  return reference;
+}
+
+export function getMediaReference(
+  fields: ShopifyMetaobjectField[],
+  keys: readonly string[],
+): ShopifyMediaReference | undefined {
+  const reference = getFieldReference(fields, keys);
+
+  if (
+    !reference ||
+    (reference.__typename !== "MediaImage" && reference.__typename !== "Video")
+  ) {
     return undefined;
   }
 
