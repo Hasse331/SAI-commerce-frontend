@@ -53,3 +53,34 @@ test("mapMediaReference maps a Shopify video reference to a video asset", () => 
     poster: "https://cdn.example.com/poster.jpg",
   });
 });
+
+test("mapMediaReference prefers an mp4 source when multiple video sources are available", () => {
+  const media = mapMediaReference(
+    {
+      __typename: "Video",
+      alt: "Shopify multi-source video",
+      previewImage: null,
+      sources: [
+        {
+          url: "https://cdn.example.com/demo.m3u8",
+          mimeType: "application/x-mpegURL",
+          format: "m3u8",
+        },
+        {
+          url: "https://cdn.example.com/demo.mp4",
+          mimeType: "video/mp4",
+          format: "mp4",
+        },
+      ],
+    },
+    "Fallback alt",
+  );
+
+  assert.deepEqual<ProductMediaAsset | undefined>(media, {
+    type: "video",
+    src: "https://cdn.example.com/demo.mp4",
+    alt: "Shopify multi-source video",
+    mimeType: "video/mp4",
+    poster: undefined,
+  });
+});

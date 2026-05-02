@@ -31,10 +31,11 @@ export function LargeMediaSection({ media }: LargeMediaSectionProps) {
         />
       ) : (
         <video
-          src={media.src}
           poster={media.poster}
           aria-label={media.alt}
-          controls
+          autoPlay
+          loop
+          muted
           playsInline
           preload="metadata"
           style={{
@@ -43,7 +44,9 @@ export function LargeMediaSection({ media }: LargeMediaSectionProps) {
             maxHeight: "540px",
             objectFit: "contain",
           }}
-        />
+        >
+          <source src={media.src} type={media.mimeType} />
+        </video>
       )}
     </Box>
   );

@@ -45,7 +45,10 @@ export function mapMediaReference(
     };
   }
 
-  const source = reference.sources.find((item) => Boolean(item.url));
+  const source =
+    reference.sources.find((item) => item.mimeType === "video/mp4" && Boolean(item.url)) ||
+    reference.sources.find((item) => item.format === "mp4" && Boolean(item.url)) ||
+    reference.sources.find((item) => Boolean(item.url));
 
   if (!source?.url) {
     return undefined;
