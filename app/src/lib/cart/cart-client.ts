@@ -21,6 +21,13 @@ export class CartClientError extends Error {
   }
 }
 
+export function isCartSessionLoss(error: unknown): error is CartClientError {
+  return (
+    error instanceof CartClientError &&
+    (error.code === "CART_SESSION_MISSING" || error.code === "CART_SESSION_EXPIRED")
+  );
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }

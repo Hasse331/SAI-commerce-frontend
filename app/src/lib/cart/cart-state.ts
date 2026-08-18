@@ -15,6 +15,7 @@ type CartStateAction =
   | { type: "mutationSucceeded"; cart: PublicCart | null }
   | { type: "addSucceeded"; cart: PublicCart | null }
   | { type: "mutationFailed"; error: string }
+  | { type: "sessionFailed"; error: string }
   | { type: "clearError" }
   | { type: "opened" }
   | { type: "closed" };
@@ -37,6 +38,8 @@ export function cartStateReducer(state: CartState, action: CartStateAction): Car
       return { ...state, status: "mutating", error: null };
     case "mutationFailed":
       return { ...state, status: "error", error: action.error };
+    case "sessionFailed":
+      return { ...state, cart: null, status: "error", error: action.error };
     case "clearError":
       return { ...state, status: "ready", error: null };
     case "opened":

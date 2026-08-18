@@ -66,6 +66,26 @@ test("a mutation failure keeps the last good cart and can be cleared", () => {
   assert.deepEqual(cartStateReducer(failedState, { type: "clearError" }), readyState);
 });
 
+test("a missing cart session clears the stale cart while preserving the safe error", () => {
+  const readyState = cartStateReducer(initialCartState, {
+    type: "loadSucceeded",
+    cart: firstCart,
+  });
+
+  assert.deepEqual(
+    cartStateReducer(readyState, {
+      type: "sessionFailed",
+      error: "Cart session has expired.",
+    }),
+    {
+      ...readyState,
+      cart: null,
+      status: "error",
+      error: "Cart session has expired.",
+    },
+  );
+});
+
 test("a successful add opens the cart after the server returns the replacement cart", () => {
   const mutatingState = cartStateReducer(initialCartState, { type: "mutationStarted" });
 

@@ -10,7 +10,11 @@ import {
   useRef,
   type ReactNode,
 } from "react";
-import { CartClientError, cartClient } from "@/lib/cart/cart-client";
+import {
+  CartClientError,
+  cartClient,
+  isCartSessionLoss,
+} from "@/lib/cart/cart-client";
 import {
   cartStateReducer,
   initialCartState,
@@ -103,7 +107,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
           },
           onFailed: (error) => {
             if (isMountedRef.current) {
-              dispatch({ type: "mutationFailed", error: errorMessage(error) });
+              dispatch({
+                type: isCartSessionLoss(error) ? "sessionFailed" : "mutationFailed",
+                error: errorMessage(error),
+              });
             }
           },
         });

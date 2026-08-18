@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { CartClientError, createCartClient } from "./cart-client";
+import {
+  CartClientError,
+  createCartClient,
+  isCartSessionLoss,
+} from "./cart-client";
 
 const cart = {
   checkoutUrl: "https://store.example/cart/c/cart-123",
@@ -102,6 +106,28 @@ test("non-OK API responses expose only the safe cart error", async () => {
       return true;
     },
   );
+});
+
+test("only missing and expired cart errors identify a lost cart session", () => {
+  assert.equal(
+    isCartSessionLoss(
+      new CartClientError("CART_SESSION_MISSING", "Cart session is missing.", 409),
+    ),
+    true,
+  );
+  assert.equal(
+    isCartSessionLoss(
+      new CartClientError("CART_SESSION_EXPIRED", "Cart session has expired.", 409),
+    ),
+    true,
+  );
+  assert.equal(
+    isCartSessionLoss(
+      new CartClientError("CART_REQUEST_FAILED", "Cart request failed.", 0),
+    ),
+    false,
+  );
+  assert.equal(isCartSessionLoss(new Error("Cart session has expired.")), false);
 });
 
 test("malformed or nonconforming responses never expose response internals", async () => {
