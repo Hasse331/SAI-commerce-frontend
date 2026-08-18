@@ -41,30 +41,41 @@ function errorMessage(error: unknown): string {
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(cartStateReducer, initialCartState);
-  const isMountedRef = useRef(false);
-  const requestIdRef = useRef(0);
+  const isMountedRef = useRef(true);
+  const loadVersionRef = useRef(0);
   const cartAsyncRef = useRef<CartAsync<PublicCart | null> | null>(null);
+
+  if (cartAsyncRef.current == null) {
+    cartAsyncRef.current = createCartAsync<PublicCart | null>();
+  }
 
   useEffect(() => {
     isMountedRef.current = true;
-    const requestId = ++requestIdRef.current;
+    const loadVersion = loadVersionRef.current;
     let isActive = true;
-
-    if (cartAsyncRef.current == null) {
-      cartAsyncRef.current = createCartAsync<PublicCart | null>();
-    }
-
     const cartAsync = cartAsyncRef.current;
+
+    if (cartAsync == null) {
+      return;
+    }
 
     void (async () => {
       try {
         const cart = await cartAsync.acquireInitialLoad(() => cartClient.loadCart());
 
-        if (isActive && isMountedRef.current && requestId === requestIdRef.current) {
+        if (
+          isActive &&
+          isMountedRef.current &&
+          loadVersion === loadVersionRef.current
+        ) {
           dispatch({ type: "loadSucceeded", cart });
         }
       } catch (error) {
-        if (isActive && isMountedRef.current && requestId === requestIdRef.current) {
+        if (
+          isActive &&
+          isMountedRef.current &&
+          loadVersion === loadVersionRef.current
+        ) {
           dispatch({ type: "mutationFailed", error: errorMessage(error) });
         }
       }
@@ -78,26 +89,28 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const runMutation = useCallback(
     async (operation: () => Promise<PublicCart | null>, opensCart = false) => {
-      const cartAsync = cartAsyncRef.current;
-
-      if (cartAsync == null) {
-        return;
-      }
-
-      const requestId = ++requestIdRef.current;
-      dispatch({ type: "mutationStarted" });
+      const cartAsync = cartAsyncRef.current!;
+      loadVersionRef.current += 1;
 
       try {
-        const cart = await cartAsync.enqueueMutation(operation);
-
-        if (isMountedRef.current && requestId === requestIdRef.current) {
-          dispatch({ type: opensCart ? "addSucceeded" : "mutationSucceeded", cart });
-        }
-      } catch (error) {
-        if (isMountedRef.current && requestId === requestIdRef.current) {
-          dispatch({ type: "mutationFailed", error: errorMessage(error) });
-        }
-      }
+        await cartAsync.enqueueMutation(operation, {
+          onStarted: () => {
+            if (isMountedRef.current) {
+              dispatch({ type: "mutationStarted" });
+            }
+          },
+          onSucceeded: (cart) => {
+            if (isMountedRef.current) {
+              dispatch({ type: opensCart ? "addSucceeded" : "mutationSucceeded", cart });
+            }
+          },
+          onFailed: (error) => {
+            if (isMountedRef.current) {
+              dispatch({ type: "mutationFailed", error: errorMessage(error) });
+            }
+          },
+        });
+      } catch {}
     },
     [],
   );
