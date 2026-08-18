@@ -69,12 +69,13 @@ Admin API access; nevertheless, protect all credentials and do not commit them.
 Always set `SHOPIFY_STOREFRONT_API_VERSION` explicitly to a supported stable
 version. At the time of this guide (2026-08-18), `2026-07` is Shopify's latest
 stable Storefront API version. Shopify recommends explicitly selecting a
-version and publishes its current support schedule in [API
-versioning](https://shopify.dev/docs/api/usage/versioning). The current runtime
-fallback is `2025-01`, which is retired; deployments must set the variable to
-`2026-07` until that fallback is fixed or otherwise verified. This documentation
-does not claim that the cart queries have been live-validated against `2026-07`:
-the acceptance test below is required before release.
+version and publishes its quarterly support schedule in [API
+versioning](https://shopify.dev/docs/api/usage/versioning). The runtime requires
+a nonblank `SHOPIFY_STOREFRONT_API_VERSION` and fails clearly when it is omitted;
+it has no version fallback. Set `2026-07` for this deployment, review the chosen
+stable version at least quarterly, and update it before Shopify support changes.
+This documentation does not claim that the cart queries have been live-validated
+against `2026-07`: the acceptance test below is required before release.
 
 For Vercel deployments, add the values in **Project > Settings > Environment
 Variables** and select the correct target. Put test-store/test-token values in
