@@ -5,6 +5,72 @@ import * as productsPageLoader from "../loaders/products-page.ts";
 import type { ShopifyProductNode } from "@/types/shopify";
 import { mapStorefrontProductToListItem } from "./product-primitives.ts";
 
+const defaultVariantSelection = `
+              variants(first: 1) {
+                nodes {
+                  id
+                  availableForSale
+                }
+              }`;
+
+const defaultVariantSelectionPattern =
+  /variants\(first: 1\)\s*{\s*nodes\s*{\s*id\s*availableForSale\s*}\s*}/s;
+
+function getSelectionSet(query: string, marker: string): string {
+  const markerIndex = query.indexOf(marker);
+  const openingBraceIndex = query.indexOf("{", markerIndex);
+
+  if (markerIndex === -1 || openingBraceIndex === -1) {
+    throw new Error(`Query has no ${marker} selection`);
+  }
+
+  let depth = 0;
+
+  for (let index = openingBraceIndex; index < query.length; index += 1) {
+    if (query[index] === "{") {
+      depth += 1;
+    }
+
+    if (query[index] === "}") {
+      depth -= 1;
+
+      if (depth === 0) {
+        return query.slice(openingBraceIndex + 1, index);
+      }
+    }
+  }
+
+  throw new Error(`Query has an unclosed ${marker} selection`);
+}
+
+function getProductsPageListProductBranch(query: string): string {
+  const referencesSelection = getSelectionSet(query, "references(first: 50)");
+  const nodesSelection = getSelectionSet(referencesSelection, "nodes");
+
+  return getSelectionSet(nodesSelection, "... on Product");
+}
+
+function moveVariantSelectionToDetailPageProductBranch(query: string): string {
+  const detailPageProductBranch = "            ... on Product {";
+  const queryWithoutListVariants = query.replace(defaultVariantSelection, "");
+  const detailPageProductBranchIndex = queryWithoutListVariants.lastIndexOf(
+    detailPageProductBranch,
+  );
+
+  if (detailPageProductBranchIndex === -1) {
+    throw new Error("Products page query has no detail page product branch");
+  }
+
+  return [
+    queryWithoutListVariants.slice(0, detailPageProductBranchIndex),
+    detailPageProductBranch,
+    defaultVariantSelection,
+    queryWithoutListVariants.slice(
+      detailPageProductBranchIndex + detailPageProductBranch.length,
+    ),
+  ].join("");
+}
+
 function makeShopifyProduct(
   overrides: Partial<ShopifyProductNode> = {},
 ): ShopifyProductNode {
@@ -65,6 +131,25 @@ test("omits merchandise when the default variant is unavailable", () => {
   assert.equal(mapStorefrontProductToListItem(product).merchandiseId, undefined);
 });
 
+test("does not select a later variant when the default variant is unavailable", () => {
+  const product = makeShopifyProduct({
+    variants: {
+      nodes: [
+        {
+          id: "gid://shopify/ProductVariant/101",
+          availableForSale: false,
+        },
+        {
+          id: "gid://shopify/ProductVariant/102",
+          availableForSale: true,
+        },
+      ],
+    },
+  });
+
+  assert.equal(mapStorefrontProductToListItem(product).merchandiseId, undefined);
+});
+
 test("product detail query requests the default purchasable variant fields", () => {
   assert.match(
     (productDetailPageLoader as { productDetailPagesQuery?: string })
@@ -75,7 +160,20 @@ test("product detail query requests the default purchasable variant fields", () 
 
 test("products page query requests the default purchasable variant fields", () => {
   assert.match(
+    getProductsPageListProductBranch(
+      (productsPageLoader as { productsPageQuery?: string }).productsPageQuery ?? "",
+    ),
+    defaultVariantSelectionPattern,
+  );
+});
+
+test("products page list contract rejects detail-page-only variants", () => {
+  const incorrectlyScopedQuery = moveVariantSelectionToDetailPageProductBranch(
     (productsPageLoader as { productsPageQuery?: string }).productsPageQuery ?? "",
-    /variants\(first: 1\)\s*{\s*nodes\s*{\s*id\s*availableForSale\s*}\s*}/s,
+  );
+
+  assert.doesNotMatch(
+    getProductsPageListProductBranch(incorrectlyScopedQuery),
+    defaultVariantSelectionPattern,
   );
 });
