@@ -13,8 +13,8 @@ import {
 import NextLink from "next/link";
 import { useCart } from "@/components/cart/cart-provider";
 import {
-  clampCartQuantity,
   formatCartMoney,
+  getCartQuantityPresentation,
   getDecrementAction,
 } from "./cart-presentation";
 import type { CartLine } from "@/types/cart";
@@ -26,7 +26,7 @@ interface CartLineItemProps {
 
 export function CartLineItem({ line, disabled }: CartLineItemProps) {
   const { removeLine, updateLine } = useCart();
-  const quantity = clampCartQuantity(line.quantity);
+  const { quantity, canIncrement } = getCartQuantityPresentation(line.quantity);
 
   const handleDecrement = () => {
     const action = getDecrementAction(quantity);
@@ -115,7 +115,7 @@ export function CartLineItem({ line, disabled }: CartLineItemProps) {
             size="sm"
             variant="outline"
             aria-label={`Increase quantity of ${line.title}`}
-            disabled={disabled || quantity >= 99}
+            disabled={disabled || !canIncrement}
             onClick={() => void updateLine(line.id, quantity + 1)}
           >
             +

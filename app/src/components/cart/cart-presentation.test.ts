@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  clampCartQuantity,
   formatCartMoney,
+  getCartQuantityPresentation,
   getDecrementAction,
 } from "./cart-presentation";
 
@@ -13,10 +13,18 @@ test("formatCartMoney renders a string amount using its Shopify currency", () =>
   );
 });
 
-test("clampCartQuantity keeps cart quantities between one and ninety-nine", () => {
-  assert.equal(clampCartQuantity(0), 1);
-  assert.equal(clampCartQuantity(42), 42);
-  assert.equal(clampCartQuantity(100), 99);
+test("cart quantity presentation preserves Shopify quantity above the editable limit", () => {
+  assert.deepEqual(getCartQuantityPresentation(100), {
+    quantity: 100,
+    canIncrement: false,
+  });
+});
+
+test("cart quantity presentation allows incrementing quantities below the editable limit", () => {
+  assert.deepEqual(getCartQuantityPresentation(42), {
+    quantity: 42,
+    canIncrement: true,
+  });
 });
 
 test("getDecrementAction removes a line when its quantity is one", () => {
@@ -25,4 +33,8 @@ test("getDecrementAction removes a line when its quantity is one", () => {
 
 test("getDecrementAction updates a line above the minimum quantity", () => {
   assert.deepEqual(getDecrementAction(2), { type: "update", quantity: 1 });
+});
+
+test("getDecrementAction safely returns an oversized Shopify quantity to the editable limit", () => {
+  assert.deepEqual(getDecrementAction(100), { type: "update", quantity: 99 });
 });

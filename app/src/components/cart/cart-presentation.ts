@@ -10,8 +10,14 @@ export function formatCartMoney({ amount, currencyCode }: Money): string {
   }).format(Number(amount));
 }
 
-export function clampCartQuantity(quantity: number): number {
-  return Math.min(maximumCartQuantity, Math.max(minimumCartQuantity, quantity));
+export function getCartQuantityPresentation(quantity: number): {
+  quantity: number;
+  canIncrement: boolean;
+} {
+  return {
+    quantity,
+    canIncrement: quantity < maximumCartQuantity,
+  };
 }
 
 export function getDecrementAction(
