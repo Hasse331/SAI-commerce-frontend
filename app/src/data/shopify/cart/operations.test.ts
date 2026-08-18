@@ -98,6 +98,37 @@ function getDirectFieldSelection(source: string, fieldName: string): string {
   throw new Error(`Missing direct ${fieldName} selection.`);
 }
 
+function getDirectFieldHeader(source: string, fieldName: string): string {
+  let depth = 0;
+
+  for (let index = 0; index < source.length; index += 1) {
+    if (source[index] === "{") {
+      depth += 1;
+      continue;
+    }
+
+    if (source[index] === "}") {
+      depth -= 1;
+      continue;
+    }
+
+    if (
+      depth === 0 &&
+      source.startsWith(fieldName, index) &&
+      !/[A-Za-z0-9_]/.test(source[index - 1] ?? "") &&
+      /[\s({]/.test(source[index + fieldName.length] ?? "")
+    ) {
+      const selectionIndex = source.indexOf("{", index + fieldName.length);
+
+      if (selectionIndex !== -1) {
+        return source.slice(index, selectionIndex);
+      }
+    }
+  }
+
+  throw new Error(`Missing direct ${fieldName} field header.`);
+}
+
 function getRootSelection(query: string): string {
   const openingBraceIndex = query.indexOf("{");
 
@@ -189,6 +220,11 @@ function assertCartSelection(cartSelection: string): void {
   const subtotalSelection = getDirectFieldSelection(costSelection, "subtotalAmount");
   const totalSelection = getDirectFieldSelection(costSelection, "totalAmount");
   const linesSelection = getDirectFieldSelection(cartSelection, "lines");
+
+  assert.match(
+    getDirectFieldHeader(cartSelection, "lines"),
+    /^lines\s*\(\s*first\s*:\s*100\s*\)\s*$/,
+  );
   const nodesSelection = getDirectFieldSelection(linesSelection, "nodes");
   const lineCostSelection = getDirectFieldSelection(nodesSelection, "cost");
   const lineTotalSelection = getDirectFieldSelection(lineCostSelection, "totalAmount");

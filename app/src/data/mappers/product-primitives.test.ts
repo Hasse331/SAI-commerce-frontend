@@ -59,6 +59,19 @@ function getProductsPageListProductBranch(query: string): string {
   return getSelectionSet(nodesSelection, "... on Product");
 }
 
+function getProductDetailPageProductBranch(query: string): string {
+  const operationSelection = getSelectionSet(query, "query ProductDetailPages");
+  const detailPagesSelection = getSelectionSet(
+    operationSelection,
+    "detailPages: metaobjects",
+  );
+  const nodesSelection = getSelectionSet(detailPagesSelection, "nodes");
+  const fieldsSelection = getSelectionSet(nodesSelection, "fields");
+  const referenceSelection = getSelectionSet(fieldsSelection, "reference");
+
+  return getSelectionSet(referenceSelection, "... on Product");
+}
+
 function moveVariantSelectionToDetailPageProductBranch(query: string): string {
   const detailPageProductBranch = "            ... on Product {";
   const queryWithoutListVariants = query.replace(defaultVariantSelection, "");
@@ -179,9 +192,11 @@ test("does not select a later variant when the default variant is unavailable", 
 
 test("product detail query requests the default purchasable variant fields", () => {
   assert.match(
-    (productDetailPageLoader as { productDetailPagesQuery?: string })
-      .productDetailPagesQuery ?? "",
-    /variants\(first: 1\)\s*{\s*nodes\s*{\s*id\s*availableForSale\s*}\s*}/s,
+    getProductDetailPageProductBranch(
+      (productDetailPageLoader as { productDetailPagesQuery?: string })
+        .productDetailPagesQuery ?? "",
+    ),
+    defaultVariantSelectionPattern,
   );
 });
 
