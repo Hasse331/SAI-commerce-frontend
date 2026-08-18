@@ -12,13 +12,15 @@ export function getCheckoutHref(cart: PublicCart | null): string | null {
     cart === null ||
     cart.lines.length === 0 ||
     !(cart.totalQuantity > 0) ||
-    cart.checkoutUrl.trim() !== cart.checkoutUrl
+    /[\u0000-\u0020\\]/.test(cart.checkoutUrl)
   ) {
     return null;
   }
 
   try {
-    if (new URL(cart.checkoutUrl).protocol !== "https:") {
+    const checkoutUrl = new URL(cart.checkoutUrl);
+
+    if (checkoutUrl.protocol !== "https:" || checkoutUrl.href !== cart.checkoutUrl) {
       return null;
     }
   } catch {

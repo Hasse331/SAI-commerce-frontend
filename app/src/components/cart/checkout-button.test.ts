@@ -47,7 +47,23 @@ test("getCheckoutHref returns null for malformed, non-HTTPS, or padded URLs", ()
   );
 });
 
-test("getCheckoutHref returns the exact HTTPS checkout URL", () => {
+test("getCheckoutHref rejects checkout URLs that require parser normalization", () => {
+  const normalizedUrls = [
+    "https:\\\\checkout.example.test\\cart\\c\\synthetic?key=synthetic#review",
+    "https://checkout.example.test/cart\t/c/synthetic?key=synthetic#review",
+    "https://checkout.example.test/cart\n/c/synthetic?key=synthetic#review",
+    "https://checkout.example.test/cart\r/c/synthetic?key=synthetic#review",
+    "https://checkout.example.test:443/cart/c/synthetic?key=synthetic#review",
+    "https://CHECKOUT.EXAMPLE.TEST/cart/c/synthetic?key=synthetic#review",
+    "https://checkout.example.test/cart/c/../synthetic?key=synthetic#review",
+  ];
+
+  for (const checkoutUrl of normalizedUrls) {
+    assert.equal(getCheckoutHref(makeCart({ checkoutUrl })), null);
+  }
+});
+
+test("getCheckoutHref returns the exact canonical Shopify-style HTTPS checkout URL", () => {
   const checkoutUrl = "https://checkout.example.test/cart/c/synthetic?key=synthetic&return=%2Fcart#review";
 
   assert.equal(getCheckoutHref(makeCart({ checkoutUrl })), checkoutUrl);
