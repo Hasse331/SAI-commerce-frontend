@@ -71,6 +71,12 @@ export interface ShopifyProductNode {
   __typename: "Product";
   id: string;
   handle: string;
+  variants: {
+    nodes: Array<{
+      id: string;
+      availableForSale: boolean;
+    }>;
+  };
   title: string;
   description: string;
   availableForSale: boolean;

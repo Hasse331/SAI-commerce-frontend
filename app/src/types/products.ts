@@ -24,6 +24,7 @@ export type ProductMediaAsset =
 
 export interface ProductSummary {
   slug: string;
+  merchandiseId?: string;
   hasDetails: boolean;
   availableForSale: boolean;
   categoryLabel: string;

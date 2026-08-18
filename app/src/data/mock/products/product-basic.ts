@@ -3,6 +3,7 @@ import type { ProductSummary } from "@/types/products";
 export const productBasicMockData: ProductSummary[] = [
   {
     slug: "signature-tube-amplifier",
+    merchandiseId: "gid://shopify/ProductVariant/mock-signature-tube-amplifier",
     hasDetails: true,
     availableForSale: true,
     categoryLabel: "Amplifiers",
@@ -24,6 +25,7 @@ export const productBasicMockData: ProductSummary[] = [
   },
   {
     slug: "reference-monitor-controller",
+    merchandiseId: "gid://shopify/ProductVariant/mock-reference-monitor-controller",
     hasDetails: true,
     availableForSale: true,
     categoryLabel: "Controllers",

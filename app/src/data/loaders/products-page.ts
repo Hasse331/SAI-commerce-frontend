@@ -19,7 +19,7 @@ import {
 } from "@/data/shopify/metaobjects/pages";
 import { seoMetaobjectFieldKeys } from "@/data/shopify/metaobjects/seo";
 
-const productsPageQuery = `
+export const productsPageQuery = `
   query ProductsPageMetaobject($type: String!, $handle: String!) {
     metaobject(handle: { type: $type, handle: $handle }) {
       id
@@ -48,6 +48,12 @@ const productsPageQuery = `
               title
               description
               availableForSale
+              variants(first: 1) {
+                nodes {
+                  id
+                  availableForSale
+                }
+              }
               productType
               cardSpecsMetafield: metafield(
                 namespace: "custom"
