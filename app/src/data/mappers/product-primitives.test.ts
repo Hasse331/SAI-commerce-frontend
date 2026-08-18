@@ -18,7 +18,7 @@ const defaultVariantSelectionPattern =
 
 function getSelectionSet(query: string, marker: string): string {
   const markerIndex = query.indexOf(marker);
-  const openingBraceIndex = query.indexOf("{", markerIndex);
+  const openingBraceIndex = query.indexOf("{", markerIndex + marker.length);
 
   if (markerIndex === -1 || openingBraceIndex === -1) {
     throw new Error(`Query has no ${marker} selection`);
@@ -44,7 +44,16 @@ function getSelectionSet(query: string, marker: string): string {
 }
 
 function getProductsPageListProductBranch(query: string): string {
-  const referencesSelection = getSelectionSet(query, "references(first: 50)");
+  const operationSelection = getSelectionSet(query, "query ProductsPageMetaobject");
+  const metaobjectSelection = getSelectionSet(
+    operationSelection,
+    "metaobject(handle: { type: $type, handle: $handle })",
+  );
+  const fieldsSelection = getSelectionSet(metaobjectSelection, "fields");
+  const referencesSelection = getSelectionSet(
+    fieldsSelection,
+    "references(first: 50)",
+  );
   const nodesSelection = getSelectionSet(referencesSelection, "nodes");
 
   return getSelectionSet(nodesSelection, "... on Product");
@@ -69,6 +78,24 @@ function moveVariantSelectionToDetailPageProductBranch(query: string): string {
       detailPageProductBranchIndex + detailPageProductBranch.length,
     ),
   ].join("");
+}
+
+function moveVariantSelectionToDecoyReferences(query: string): string {
+  const metaobjectBranch =
+    "    metaobject(handle: { type: $type, handle: $handle }) {";
+  const decoyReferences = `    decoy {
+      references(first: 50) {
+        nodes {
+          ... on Product {${defaultVariantSelection}
+          }
+        }
+      }
+    }
+`;
+
+  return query
+    .replace(defaultVariantSelection, "")
+    .replace(metaobjectBranch, `${decoyReferences}${metaobjectBranch}`);
 }
 
 function makeShopifyProduct(
@@ -169,6 +196,17 @@ test("products page query requests the default purchasable variant fields", () =
 
 test("products page list contract rejects detail-page-only variants", () => {
   const incorrectlyScopedQuery = moveVariantSelectionToDetailPageProductBranch(
+    (productsPageLoader as { productsPageQuery?: string }).productsPageQuery ?? "",
+  );
+
+  assert.doesNotMatch(
+    getProductsPageListProductBranch(incorrectlyScopedQuery),
+    defaultVariantSelectionPattern,
+  );
+});
+
+test("products page list contract rejects decoy references", () => {
+  const incorrectlyScopedQuery = moveVariantSelectionToDecoyReferences(
     (productsPageLoader as { productsPageQuery?: string }).productsPageQuery ?? "",
   );
 
