@@ -15,6 +15,22 @@ const cart = {
   lines: [],
 };
 
+const cartWithLine = {
+  ...cart,
+  lines: [
+    {
+      id: "line-1",
+      merchandiseId: "variant-1",
+      quantity: 2,
+      title: "Test product",
+      slug: "test-product",
+      image: { src: "https://cdn.example/product.jpg", alt: "Test product" },
+      unitPrice: { amount: "15.00", currencyCode: "USD" },
+      totalPrice: { amount: "30.00", currencyCode: "USD" },
+    },
+  ],
+};
+
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -31,6 +47,22 @@ test("loadCart requests the current cart without caching", async () => {
 
   assert.deepEqual(await client.loadCart(), cart);
   assert.deepEqual(received, ["/api/cart", { method: "GET", cache: "no-store" }]);
+});
+
+test("loadCart accepts an explicit null cart", async () => {
+  const client = createCartClient(async () => jsonResponse({ cart: null }));
+
+  assert.equal(await client.loadCart(), null);
+});
+
+test("loadCart accepts a complete public cart and harmless extension fields", async () => {
+  const extendedCart = {
+    ...cartWithLine,
+    notices: [{ code: "CART_WARNING", message: "Review this cart." }],
+  };
+  const client = createCartClient(async () => jsonResponse({ cart: extendedCart }));
+
+  assert.deepEqual(await client.loadCart(), extendedCart);
 });
 
 test("addItem posts merchandise and quantity as JSON", async () => {
@@ -136,6 +168,43 @@ test("malformed or nonconforming responses never expose response internals", asy
 
   for (const operation of [malformedClient.loadCart(), missingCartClient.loadCart()]) {
     await assert.rejects(operation, (error: unknown) => {
+      assert.ok(error instanceof CartClientError);
+      assert.equal(error.code, "CART_RESPONSE_INVALID");
+      assert.equal(error.message, "Cart response was invalid.");
+      assert.equal("response" in error, false);
+      return true;
+    });
+  }
+});
+
+test("successful responses reject malformed public cart fields", async () => {
+  const malformedCarts: unknown[] = [
+    false,
+    {},
+    { ...cart, checkoutUrl: null },
+    { ...cart, totalQuantity: "2" },
+    { ...cart, subtotal: { amount: 30, currencyCode: "USD" } },
+    { ...cart, total: null },
+    { ...cart, lines: {} },
+    { ...cart, notices: [{ code: "CART_WARNING" }] },
+    {
+      ...cartWithLine,
+      lines: [{ ...cartWithLine.lines[0], merchandiseId: undefined }],
+    },
+    {
+      ...cartWithLine,
+      lines: [{ ...cartWithLine.lines[0], quantity: 1.5 }],
+    },
+    {
+      ...cartWithLine,
+      lines: [{ ...cartWithLine.lines[0], image: { src: 1, alt: "Product" } }],
+    },
+  ];
+
+  for (const malformedCart of malformedCarts) {
+    const client = createCartClient(async () => jsonResponse({ cart: malformedCart }));
+
+    await assert.rejects(client.loadCart(), (error: unknown) => {
       assert.ok(error instanceof CartClientError);
       assert.equal(error.code, "CART_RESPONSE_INVALID");
       assert.equal(error.message, "Cart response was invalid.");

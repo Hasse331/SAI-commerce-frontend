@@ -1,10 +1,6 @@
-import type { PublicCart } from "@/types/cart";
+import type { CartLine, Money, PublicCart } from "@/types/cart";
 
 type Fetcher = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
-
-type CartResponse = {
-  cart: PublicCart | null;
-};
 
 const INVALID_RESPONSE_CODE = "CART_RESPONSE_INVALID";
 const INVALID_RESPONSE_MESSAGE = "Cart response was invalid.";
@@ -32,6 +28,78 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function isMoney(value: unknown): value is Money {
+  return (
+    isRecord(value) &&
+    typeof value.amount === "string" &&
+    typeof value.currencyCode === "string"
+  );
+}
+
+function isCartLine(value: unknown): value is CartLine {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  const hasValidImage =
+    value.image === null ||
+    (isRecord(value.image) &&
+      typeof value.image.src === "string" &&
+      typeof value.image.alt === "string");
+
+  return (
+    typeof value.id === "string" &&
+    typeof value.merchandiseId === "string" &&
+    typeof value.quantity === "number" &&
+    Number.isInteger(value.quantity) &&
+    value.quantity > 0 &&
+    typeof value.title === "string" &&
+    typeof value.slug === "string" &&
+    hasValidImage &&
+    isMoney(value.unitPrice) &&
+    isMoney(value.totalPrice)
+  );
+}
+
+function hasValidNotices(value: Record<string, unknown>): boolean {
+  if (!Object.hasOwn(value, "notices")) {
+    return true;
+  }
+
+  return (
+    Array.isArray(value.notices) &&
+    value.notices.every(
+      (notice) =>
+        isRecord(notice) &&
+        typeof notice.code === "string" &&
+        typeof notice.message === "string",
+    )
+  );
+}
+
+function isPublicCart(value: unknown): value is PublicCart {
+  return (
+    isRecord(value) &&
+    typeof value.checkoutUrl === "string" &&
+    typeof value.totalQuantity === "number" &&
+    Number.isInteger(value.totalQuantity) &&
+    value.totalQuantity >= 0 &&
+    isMoney(value.subtotal) &&
+    isMoney(value.total) &&
+    Array.isArray(value.lines) &&
+    value.lines.every(isCartLine) &&
+    hasValidNotices(value)
+  );
+}
+
+function invalidResponse(status: number): CartClientError {
+  return new CartClientError(
+    INVALID_RESPONSE_CODE,
+    INVALID_RESPONSE_MESSAGE,
+    status,
+  );
+}
+
 function getApiError(body: unknown, status: number): CartClientError {
   if (
     isRecord(body) &&
@@ -51,11 +119,7 @@ async function readCartResponse(response: Response): Promise<PublicCart | null> 
   try {
     body = await response.json();
   } catch {
-    throw new CartClientError(
-      INVALID_RESPONSE_CODE,
-      INVALID_RESPONSE_MESSAGE,
-      response.status,
-    );
+    throw invalidResponse(response.status);
   }
 
   if (!response.ok) {
@@ -63,14 +127,14 @@ async function readCartResponse(response: Response): Promise<PublicCart | null> 
   }
 
   if (!isRecord(body) || !Object.hasOwn(body, "cart")) {
-    throw new CartClientError(
-      INVALID_RESPONSE_CODE,
-      INVALID_RESPONSE_MESSAGE,
-      response.status,
-    );
+    throw invalidResponse(response.status);
   }
 
-  return (body as CartResponse).cart;
+  if (body.cart !== null && !isPublicCart(body.cart)) {
+    throw invalidResponse(response.status);
+  }
+
+  return body.cart;
 }
 
 async function requestCart(
