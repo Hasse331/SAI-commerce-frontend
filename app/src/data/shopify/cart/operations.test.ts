@@ -229,9 +229,17 @@ function getCartSelectionForOperation(query: string, operationField: string): st
 
 test("cart operations send the documented cart input variables and map carts", async () => {
   const rawCart = makeShopifyCart();
-  const calls: Array<{ query: string; variables?: Record<string, unknown> }> = [];
-  const request = async <TData>(query: string, variables?: Record<string, unknown>) => {
-    calls.push({ query, variables });
+  const calls: Array<{
+    query: string;
+    variables?: Record<string, unknown>;
+    options?: { cache: "no-store" };
+  }> = [];
+  const request = async <TData>(
+    query: string,
+    variables?: Record<string, unknown>,
+    options?: { cache: "no-store" },
+  ) => {
+    calls.push({ query, variables, options });
 
     if (query.includes("GetCart")) {
       return { cart: rawCart } as TData;
@@ -292,6 +300,10 @@ test("cart operations send the documented cart input variables and map carts", a
         lineIds: ["gid://shopify/CartLine/1"],
       },
     ],
+  );
+  assert.deepEqual(
+    calls.map((call) => call.options),
+    Array.from({ length: 5 }, () => ({ cache: "no-store" })),
   );
 });
 

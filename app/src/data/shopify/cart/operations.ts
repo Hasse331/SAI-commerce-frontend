@@ -1,12 +1,18 @@
 import type { Cart } from "@/types/cart";
-import { storefrontQuery } from "../storefront-client";
+import {
+  storefrontQuery,
+  type StorefrontRequestOptions,
+} from "../storefront-client";
 import { mapShopifyCart } from "./mapper";
 import type { ShopifyCart, ShopifyCartMutationPayload } from "./types";
 
 export type StorefrontRequest = <TData>(
   query: string,
   variables?: Record<string, unknown>,
+  options?: StorefrontRequestOptions,
 ) => Promise<TData>;
+
+const cartRequestOptions = { cache: "no-store" } as const;
 
 export class CartOperationError extends Error {
   constructor(
@@ -137,7 +143,11 @@ interface ShopifyRemoveCartLineData {
 
 export function createCartOperations(request: StorefrontRequest) {
   async function getCart(cartId: string): Promise<Cart | null> {
-    const data = await request<ShopifyGetCartData>(getCartQuery, { id: cartId });
+    const data = await request<ShopifyGetCartData>(
+      getCartQuery,
+      { id: cartId },
+      cartRequestOptions,
+    );
 
     return data.cart ? mapShopifyCart(data.cart) : null;
   }
@@ -146,11 +156,15 @@ export function createCartOperations(request: StorefrontRequest) {
     merchandiseId: string,
     quantity: number,
   ): Promise<Cart> {
-    const data = await request<ShopifyCreateCartData>(createCartMutation, {
-      input: {
-        lines: [{ merchandiseId, quantity }],
+    const data = await request<ShopifyCreateCartData>(
+      createCartMutation,
+      {
+        input: {
+          lines: [{ merchandiseId, quantity }],
+        },
       },
-    });
+      cartRequestOptions,
+    );
 
     return mapMutationCart(data.cartCreate);
   }
@@ -160,10 +174,14 @@ export function createCartOperations(request: StorefrontRequest) {
     merchandiseId: string,
     quantity: number,
   ): Promise<Cart> {
-    const data = await request<ShopifyAddCartLineData>(addCartLineMutation, {
-      cartId,
-      lines: [{ merchandiseId, quantity }],
-    });
+    const data = await request<ShopifyAddCartLineData>(
+      addCartLineMutation,
+      {
+        cartId,
+        lines: [{ merchandiseId, quantity }],
+      },
+      cartRequestOptions,
+    );
 
     return mapMutationCart(data.cartLinesAdd);
   }
@@ -173,19 +191,27 @@ export function createCartOperations(request: StorefrontRequest) {
     lineId: string,
     quantity: number,
   ): Promise<Cart> {
-    const data = await request<ShopifyUpdateCartLineData>(updateCartLineMutation, {
-      cartId,
-      lines: [{ id: lineId, quantity }],
-    });
+    const data = await request<ShopifyUpdateCartLineData>(
+      updateCartLineMutation,
+      {
+        cartId,
+        lines: [{ id: lineId, quantity }],
+      },
+      cartRequestOptions,
+    );
 
     return mapMutationCart(data.cartLinesUpdate);
   }
 
   async function removeCartLine(cartId: string, lineId: string): Promise<Cart> {
-    const data = await request<ShopifyRemoveCartLineData>(removeCartLineMutation, {
-      cartId,
-      lineIds: [lineId],
-    });
+    const data = await request<ShopifyRemoveCartLineData>(
+      removeCartLineMutation,
+      {
+        cartId,
+        lineIds: [lineId],
+      },
+      cartRequestOptions,
+    );
 
     return mapMutationCart(data.cartLinesRemove);
   }

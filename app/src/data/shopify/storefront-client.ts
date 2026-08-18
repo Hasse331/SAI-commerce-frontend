@@ -3,7 +3,14 @@ import {
   type StorefrontApiClient,
 } from "@shopify/storefront-api-client";
 
-let storefrontClient: StorefrontApiClient | null = null;
+export interface StorefrontRequestOptions {
+  cache?: "no-store";
+}
+
+type StorefrontCachePolicy = "revalidate" | "no-store";
+
+let storefrontContentClient: StorefrontApiClient | null = null;
+let storefrontCartClient: StorefrontApiClient | null = null;
 
 export function resolveStorefrontApiVersion(value: string | undefined): string {
   const apiVersion = value?.trim();
@@ -18,8 +25,11 @@ export function resolveStorefrontApiVersion(value: string | undefined): string {
 export async function storefrontQuery<TData>(
   query: string,
   variables?: Record<string, unknown>,
+  options?: StorefrontRequestOptions,
 ): Promise<TData> {
-  const client = getStorefrontClient();
+  const client = getStorefrontClient(
+    options?.cache === "no-store" ? "no-store" : "revalidate",
+  );
   const { data, errors } = await client.request<TData>(query, { variables });
 
   if (errors) {
@@ -33,9 +43,30 @@ export async function storefrontQuery<TData>(
   return data;
 }
 
-function getStorefrontClient(): StorefrontApiClient {
-  if (storefrontClient) {
-    return storefrontClient;
+function applyCachePolicy(
+  init: RequestInit | undefined,
+  cachePolicy: StorefrontCachePolicy,
+): RequestInit {
+  const requestInit: RequestInit = { ...init };
+
+  if (cachePolicy === "no-store") {
+    delete requestInit.next;
+    requestInit.cache = "no-store";
+    return requestInit;
+  }
+
+  requestInit.next = { revalidate: 60 };
+  return requestInit;
+}
+
+function getStorefrontClient(
+  cachePolicy: StorefrontCachePolicy,
+): StorefrontApiClient {
+  const existingClient =
+    cachePolicy === "no-store" ? storefrontCartClient : storefrontContentClient;
+
+  if (existingClient) {
+    return existingClient;
   }
 
   const storeDomain = process.env.SHOPIFY_STORE_DOMAIN;
@@ -53,18 +84,21 @@ function getStorefrontClient(): StorefrontApiClient {
     process.env.SHOPIFY_STOREFRONT_API_VERSION,
   );
 
-  storefrontClient = createStorefrontApiClient({
+  const client = createStorefrontApiClient({
     storeDomain,
     apiVersion,
     publicAccessToken: storefrontToken,
     clientName: "sai-commerce-frontend",
     retries: 1,
     customFetchApi: (url, init) =>
-      fetch(url, {
-        ...init,
-        next: { revalidate: 60 },
-      }),
+      fetch(url, applyCachePolicy(init, cachePolicy)),
   });
 
-  return storefrontClient;
+  if (cachePolicy === "no-store") {
+    storefrontCartClient = client;
+  } else {
+    storefrontContentClient = client;
+  }
+
+  return client;
 }
