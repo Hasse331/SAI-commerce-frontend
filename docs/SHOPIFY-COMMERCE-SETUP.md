@@ -108,18 +108,41 @@ cart ID, checkout URL, buyer data, or credential in test notes or output.
    channel](https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api/manage-headless-channels).
 7. Disable test mode or the Bogus Gateway before enabling real-card orders.
 
-## Credential rotation and recovery
+## Public Storefront token replacement and recovery
 
-Rotate a Storefront API credential from the selected Headless storefront:
+This runtime consumes a **public** Storefront token through `publicAccessToken`.
+Shopify Headless has a **Rotate private access token** control, but that control
+and its private-token overlap behavior are unrelated to this runtime and must
+not be used or relied on for this public-token replacement.
 
-1. Generate the replacement credential in **Sales channels > Headless >
-   storefront > Manage API access**.
-2. Update the appropriate local untracked environment file and/or deployment
-   environment target. Do not commit the value.
-3. Redeploy and run the relevant cart and checkout acceptance test.
-4. Revoke the old credential only after the new deployment works. Shopify keeps
-   old and new credentials valid during this handoff; see [Bring your own
-   headless stack](https://shopify.dev/docs/storefronts/headless/bring-your-own-stack/index).
+Use a new Headless storefront for a controlled public-token cutover:
+
+1. In **Sales channels > Headless**, add another storefront. Shopify documents
+   the [add-storefront flow and token relationship](https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api/manage-headless-channels):
+   each storefront has its own tokens, while the channel's permissions are
+   shared.
+2. Copy the new storefront's **public** Storefront token into the existing
+   `SHOPIFY_STOREFRONT_PUBLIC_TOKEN` environment variable for the Preview
+   deployment only. Do not commit or record the value.
+3. Deploy Preview, complete the cart and checkout acceptance test above, and
+   verify the resulting test order is attributed to the **new** storefront in
+   Shopify Orders.
+4. After Preview succeeds, set the same new public token for Production,
+   redeploy, and repeat the production-safe acceptance check before declaring
+   the cutover complete.
+5. Keep the old and new storefronts intentionally active while this cutover is
+   being verified. A new storefront changes the Headless order-attribution
+   identity. Do not infer any public-token rotation or overlap semantics from
+   this parallel storefront setup.
+6. When no deployment still uses the old storefront, delete or otherwise retire
+   it as supported by the Headless channel. Shopify's [delete-storefront
+   guidance](https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api/manage-headless-channels)
+   notes that deletion invalidates its Storefront API tokens and cannot be
+   undone.
+
+Creating Storefront tokens through a custom app or the Admin API is outside the
+scope of this workflow. Admin API access remains unnecessary for the normal
+cart and hosted-checkout flow.
 
 If a release fails, immediately deploy the previous known-good `main` commit,
 then investigate configuration, token permissions, product publication,
