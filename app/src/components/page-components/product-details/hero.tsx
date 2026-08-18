@@ -35,12 +35,9 @@ export function Hero({ product, image, ctaLabel }: HeroProps) {
         />
       </Box>
 
-      {product.availableForSale ? (
+      {product.availableForSale && product.merchandiseId ? (
         <AddToCartButton
-          slug={product.slug}
-          title={product.title}
-          price={product.price}
-          imageUrl={image.src}
+          merchandiseId={product.merchandiseId}
           label={ctaLabel}
         />
       ) : (

@@ -15,7 +15,8 @@ import {
 import { useCart } from "@/components/cart/cart-provider";
 
 export function CartSidebar() {
-  const { isOpen, closeCart, itemCount, items, removeItem } = useCart();
+  const { isOpen, closeCart, itemCount, cart, removeLine } = useCart();
+  const items = cart?.lines ?? [];
 
   if (!isOpen) {
     return null;
@@ -72,7 +73,7 @@ export function CartSidebar() {
               </Box>
             ) : (
               items.map((item) => (
-                <Box key={item.slug} borderWidth="1px" rounded="lg" p={4}>
+                <Box key={item.id} borderWidth="1px" rounded="lg" p={4}>
                   <Flex gap={4}>
                     <Box
                       w="92px"
@@ -83,8 +84,8 @@ export function CartSidebar() {
                       flexShrink={0}
                     >
                       <Image
-                        src={item.imageUrl}
-                        alt={item.title}
+                        src={item.image?.src ?? "/globe.svg"}
+                        alt={item.image?.alt ?? item.title}
                         w="full"
                         h="full"
                         objectFit="contain"
@@ -97,7 +98,7 @@ export function CartSidebar() {
                           {item.title}
                         </Heading>
                         <Text fontSize="sm" color="fgMuted">
-                          {item.price}
+                          {item.unitPrice.amount} {item.unitPrice.currencyCode}
                         </Text>
                         <Text fontSize="sm">Qty: {item.quantity}</Text>
                       </Box>
@@ -106,7 +107,7 @@ export function CartSidebar() {
                         variant="ghost"
                         size="sm"
                         alignSelf="start"
-                        onClick={() => removeItem(item.slug)}
+                        onClick={() => void removeLine(item.id)}
                       >
                         Remove
                       </Button>
