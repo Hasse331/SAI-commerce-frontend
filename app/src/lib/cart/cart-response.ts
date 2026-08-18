@@ -15,6 +15,7 @@ export function toPublicCart(cart: Cart): PublicCart {
     subtotal: cart.subtotal,
     total: cart.total,
     lines: cart.lines,
+    ...(cart.notices ? { notices: cart.notices } : {}),
   };
 }
 

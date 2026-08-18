@@ -68,6 +68,26 @@ test("GET returns the normalized cart for an active session", async () => {
   assertPublicCartResponse(await response.json());
 });
 
+test("GET returns buyer-safe cart notices without exposing the root cart id", async () => {
+  const cartWithNotices: Cart = {
+    ...cart,
+    notices: [
+      {
+        code: "MERCHANDISE_NOT_ENOUGH_STOCK",
+        message: "The requested quantity was adjusted because stock is limited.",
+      },
+    ],
+  };
+  const response = await GET.handle({
+    cartId: "cart-123",
+    operations: createOperations({ getCart: async () => cartWithNotices }),
+  });
+  const body = await response.json();
+
+  assert.deepEqual(body.cart.notices, cartWithNotices.notices);
+  assert.equal("id" in body.cart, false);
+});
+
 test("GET clears an expired cart session", async () => {
   const response = await GET.handle({
     cartId: "expired-cart",

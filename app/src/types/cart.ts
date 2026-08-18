@@ -14,6 +14,11 @@ export interface CartLine {
   totalPrice: Money;
 }
 
+export interface CartNotice {
+  code: string;
+  message: string;
+}
+
 export interface Cart {
   id: string;
   checkoutUrl: string;
@@ -21,6 +26,7 @@ export interface Cart {
   subtotal: Money;
   total: Money;
   lines: CartLine[];
+  notices?: CartNotice[];
 }
 
 export type PublicCart = Omit<Cart, "id">;

@@ -53,6 +53,16 @@ export function CartContent() {
         </Alert.Root>
       ) : null}
 
+      {cart?.notices?.map((notice, index) => (
+        <Alert.Root key={`${notice.code}-${index}`} status="warning">
+          <Alert.Indicator />
+          <Alert.Content>
+            <Alert.Title>Cart updated</Alert.Title>
+            <Alert.Description>{notice.message}</Alert.Description>
+          </Alert.Content>
+        </Alert.Root>
+      ))}
+
       {cart === null || lines.length === 0 ? (
         <Box borderWidth="1px" borderColor="border" rounded="lg" p={5}>
           <Stack gap={3}>

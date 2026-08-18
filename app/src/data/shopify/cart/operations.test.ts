@@ -360,6 +360,46 @@ test("prioritizes a Shopify user error even when the mutation also returns a car
   );
 });
 
+test("preserves the authoritative cart and normalizes Shopify mutation warnings", async () => {
+  const operations = createCartOperations(async () => ({
+    cartLinesAdd: {
+      cart: makeShopifyCart(),
+      userErrors: [],
+      warnings: [
+        {
+          code: "MERCHANDISE_NOT_ENOUGH_STOCK",
+          message: "Internal Shopify warning detail must not cross the API boundary.",
+          target: "gid://shopify/CartLine/secret-target",
+        },
+        {
+          code: "FUTURE_WARNING_CODE",
+          message: "An unknown warning must also be normalized.",
+          target: "gid://shopify/Cart/secret-cart",
+        },
+      ],
+    },
+  }));
+
+  const result = await operations.addCartLine(
+    "gid://shopify/Cart/1",
+    "gid://shopify/ProductVariant/1",
+    4,
+  );
+
+  assert.equal(result.id, "gid://shopify/Cart/1");
+  assert.deepEqual(result.notices, [
+    {
+      code: "MERCHANDISE_NOT_ENOUGH_STOCK",
+      message: "The requested quantity was adjusted because stock is limited.",
+    },
+    {
+      code: "CART_UPDATED_WITH_WARNING",
+      message: "Shopify adjusted the cart. Please review it before checkout.",
+    },
+  ]);
+  assert.doesNotMatch(JSON.stringify(result), /secret|Internal Shopify/);
+});
+
 test("throws MISSING_CART_RESPONSE for a mutation with no cart or user errors", async () => {
   const operations = createCartOperations(async () => ({
     cartCreate: { cart: null, userErrors: [] },
@@ -415,6 +455,21 @@ test("each cart operation requests the required nested cart selection", async ()
   assertCartSelection(getCartSelectionForOperation(queries[2], "cartLinesAdd"));
   assertCartSelection(getCartSelectionForOperation(queries[3], "cartLinesUpdate"));
   assertCartSelection(getCartSelectionForOperation(queries[4], "cartLinesRemove"));
+
+  for (const [query, operationField] of [
+    [queries[1], "cartCreate"],
+    [queries[2], "cartLinesAdd"],
+    [queries[3], "cartLinesUpdate"],
+    [queries[4], "cartLinesRemove"],
+  ] as const) {
+    const operationSelection = getDirectFieldSelection(
+      getRootSelection(query),
+      operationField,
+    );
+    const warningSelection = getDirectFieldSelection(operationSelection, "warnings");
+
+    assertDirectFields(warningSelection, ["code", "message", "target"]);
+  }
 
   const decoyQuery = `
     query GetCart($id: ID!) {

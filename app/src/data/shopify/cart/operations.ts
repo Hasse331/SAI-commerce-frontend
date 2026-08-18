@@ -1,4 +1,4 @@
-import type { Cart } from "@/types/cart";
+import type { Cart, CartNotice } from "@/types/cart";
 import {
   storefrontQuery,
   type StorefrontRequestOptions,
@@ -64,6 +64,7 @@ const createCartMutation = `
         ${cartSelection}
       }
       userErrors { code message }
+      warnings { code message target }
     }
   }
 `;
@@ -75,6 +76,7 @@ const addCartLineMutation = `
         ${cartSelection}
       }
       userErrors { code message }
+      warnings { code message target }
     }
   }
 `;
@@ -86,6 +88,7 @@ const updateCartLineMutation = `
         ${cartSelection}
       }
       userErrors { code message }
+      warnings { code message target }
     }
   }
 `;
@@ -97,9 +100,45 @@ const removeCartLineMutation = `
         ${cartSelection}
       }
       userErrors { code message }
+      warnings { code message target }
     }
   }
 `;
+
+function normalizeCartWarning(code: string): CartNotice {
+  if (code === "MERCHANDISE_NOT_ENOUGH_STOCK") {
+    return {
+      code,
+      message: "The requested quantity was adjusted because stock is limited.",
+    };
+  }
+
+  if (code === "MERCHANDISE_OUT_OF_STOCK") {
+    return {
+      code,
+      message: "An out-of-stock item was removed or adjusted.",
+    };
+  }
+
+  if (code === "PRODUCT_UNAVAILABLE_IN_BUYER_LOCATION") {
+    return {
+      code,
+      message: "An item is unavailable in the selected buyer location.",
+    };
+  }
+
+  if (code.startsWith("DISCOUNT_")) {
+    return {
+      code,
+      message: "A discount could not be applied. Please review the cart at checkout.",
+    };
+  }
+
+  return {
+    code: "CART_UPDATED_WITH_WARNING",
+    message: "Shopify adjusted the cart. Please review it before checkout.",
+  };
+}
 
 function mapMutationCart(payload: ShopifyCartMutationPayload): Cart {
   const userError = payload.userErrors[0];
@@ -112,7 +151,12 @@ function mapMutationCart(payload: ShopifyCartMutationPayload): Cart {
   }
 
   if (payload.cart) {
-    return mapShopifyCart(payload.cart);
+    const cart = mapShopifyCart(payload.cart);
+    const notices = (payload.warnings ?? []).map((warning) =>
+      normalizeCartWarning(warning.code),
+    );
+
+    return notices.length > 0 ? { ...cart, notices } : cart;
   }
 
   throw new CartOperationError(

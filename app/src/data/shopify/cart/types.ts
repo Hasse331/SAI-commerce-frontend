@@ -43,7 +43,14 @@ export interface ShopifyCartUserError {
   message: string;
 }
 
+export interface ShopifyCartWarning {
+  code: string;
+  message: string;
+  target: string;
+}
+
 export interface ShopifyCartMutationPayload {
   cart: ShopifyCart | null;
   userErrors: ShopifyCartUserError[];
+  warnings?: ShopifyCartWarning[];
 }
