@@ -13,6 +13,7 @@ import {
 } from "@chakra-ui/react";
 import NextLink from "next/link";
 import { useCart } from "@/components/cart/cart-provider";
+import { CheckoutButton } from "./checkout-button";
 import { CartLineItem } from "./cart-line-item";
 import { formatCartMoney } from "./cart-presentation";
 
@@ -76,6 +77,8 @@ export function CartContent() {
               <Text fontWeight="semibold">{formatCartMoney(cart.subtotal)}</Text>
             </HStack>
           </Box>
+
+          <CheckoutButton cart={cart} status={status} />
         </>
       )}
     </Stack>
