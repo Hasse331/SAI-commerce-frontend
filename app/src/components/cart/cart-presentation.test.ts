@@ -37,4 +37,6 @@ test("getDecrementAction updates a line above the minimum quantity", () => {
 
 test("getDecrementAction safely returns an oversized Shopify quantity to the editable limit", () => {
   assert.deepEqual(getDecrementAction(100), { type: "update", quantity: 99 });
+  assert.deepEqual(getDecrementAction(101), { type: "update", quantity: 99 });
+  assert.deepEqual(getDecrementAction(250), { type: "update", quantity: 99 });
 });

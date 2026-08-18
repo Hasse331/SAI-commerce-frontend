@@ -27,5 +27,9 @@ export function getDecrementAction(
     return { type: "remove" };
   }
 
+  if (quantity > maximumCartQuantity) {
+    return { type: "update", quantity: maximumCartQuantity };
+  }
+
   return { type: "update", quantity: quantity - 1 };
 }
