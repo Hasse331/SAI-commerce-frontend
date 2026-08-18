@@ -22,3 +22,5 @@ export interface Cart {
   total: Money;
   lines: CartLine[];
 }
+
+export type PublicCart = Omit<Cart, "id">;
