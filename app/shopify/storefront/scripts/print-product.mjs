@@ -1,4 +1,4 @@
-const apiVersion = process.env.SHOPIFY_STOREFRONT_API_VERSION || "2025-01";
+const apiVersion = process.env.SHOPIFY_STOREFRONT_API_VERSION?.trim() || "";
 const storeDomain = process.env.SHOPIFY_STORE_DOMAIN;
 const storefrontToken = process.env.SHOPIFY_STOREFRONT_PUBLIC_TOKEN;
 const productHandle = process.argv[2] || process.env.SHOPIFY_PRODUCT_HANDLE || "";
@@ -14,6 +14,11 @@ if (!storeDomain) {
 
 if (!storefrontToken) {
   console.error("Missing SHOPIFY_STOREFRONT_PUBLIC_TOKEN in environment");
+  process.exit(1);
+}
+
+if (!apiVersion) {
+  console.error("Missing SHOPIFY_STOREFRONT_API_VERSION in environment");
   process.exit(1);
 }
 
