@@ -5,6 +5,16 @@ import {
 
 let storefrontClient: StorefrontApiClient | null = null;
 
+export function resolveStorefrontApiVersion(value: string | undefined): string {
+  const apiVersion = value?.trim();
+
+  if (!apiVersion) {
+    throw new Error("Missing SHOPIFY_STOREFRONT_API_VERSION");
+  }
+
+  return apiVersion;
+}
+
 export async function storefrontQuery<TData>(
   query: string,
   variables?: Record<string, unknown>,
@@ -30,7 +40,6 @@ function getStorefrontClient(): StorefrontApiClient {
 
   const storeDomain = process.env.SHOPIFY_STORE_DOMAIN;
   const storefrontToken = process.env.SHOPIFY_STOREFRONT_PUBLIC_TOKEN;
-  const apiVersion = process.env.SHOPIFY_STOREFRONT_API_VERSION || "2025-01";
 
   if (!storeDomain) {
     throw new Error("Missing SHOPIFY_STORE_DOMAIN");
@@ -39,6 +48,10 @@ function getStorefrontClient(): StorefrontApiClient {
   if (!storefrontToken) {
     throw new Error("Missing SHOPIFY_STOREFRONT_PUBLIC_TOKEN");
   }
+
+  const apiVersion = resolveStorefrontApiVersion(
+    process.env.SHOPIFY_STOREFRONT_API_VERSION,
+  );
 
   storefrontClient = createStorefrontApiClient({
     storeDomain,
