@@ -12,6 +12,9 @@ Project architecture is inspired by clean architectural desgin. UI components an
 - `docs/` project notes and planning docs
 - `design-prototype/` early design material
 
+The active system overview is in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+The original Hydrogen/Oxygen plan is retained only as project history.
+
 ## Data
 
 - data source is selected with `NEXT_PUBLIC_DATA_SOURCE`

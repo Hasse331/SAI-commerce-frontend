@@ -1,5 +1,12 @@
 # Initial project plan
 
+> **Historical document (superseded).** This was the initial plan from
+> 2026-03-04. Its Hydrogen and Oxygen decisions are no longer active. The
+> approved replacement is recorded in
+> `001-MIGRATION-FROM-HYDROGEN-TO-NEXTJS.md`; the current system is summarized
+> in `docs/ARCHITECTURE.md`. Keep this file as project history, not as
+> implementation guidance.
+
 Date created: 2026-03-04
 
 By: Hans Imberg
