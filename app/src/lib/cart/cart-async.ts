@@ -1,5 +1,6 @@
 export interface CartAsync<T> {
   acquireInitialLoad(loader: () => Promise<T>): Promise<T>;
+  shouldApplyInitialLoad(): boolean;
   enqueueMutation(
     operation: () => Promise<T>,
     lifecycle?: CartMutationLifecycle<T>,
@@ -14,6 +15,7 @@ export interface CartMutationLifecycle<T> {
 
 export function createCartAsync<T>(): CartAsync<T> {
   let initialLoad: Promise<T> | null = null;
+  let initialLoadIsCurrent = true;
   let mutationTail: Promise<void> = Promise.resolve();
 
   return {
@@ -24,10 +26,15 @@ export function createCartAsync<T>(): CartAsync<T> {
 
       return initialLoad;
     },
+    shouldApplyInitialLoad(): boolean {
+      return initialLoadIsCurrent;
+    },
     enqueueMutation(
       operation: () => Promise<T>,
       lifecycle?: CartMutationLifecycle<T>,
     ): Promise<T> {
+      initialLoadIsCurrent = false;
+
       const runMutation = async () => {
         lifecycle?.onStarted();
 

@@ -42,7 +42,6 @@ function errorMessage(error: unknown): string {
 export function CartProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(cartStateReducer, initialCartState);
   const isMountedRef = useRef(true);
-  const loadVersionRef = useRef(0);
   const cartAsyncRef = useRef<CartAsync<PublicCart | null> | null>(null);
 
   if (cartAsyncRef.current == null) {
@@ -51,7 +50,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     isMountedRef.current = true;
-    const loadVersion = loadVersionRef.current;
     let isActive = true;
     const cartAsync = cartAsyncRef.current;
 
@@ -66,7 +64,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         if (
           isActive &&
           isMountedRef.current &&
-          loadVersion === loadVersionRef.current
+          cartAsync.shouldApplyInitialLoad()
         ) {
           dispatch({ type: "loadSucceeded", cart });
         }
@@ -74,7 +72,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         if (
           isActive &&
           isMountedRef.current &&
-          loadVersion === loadVersionRef.current
+          cartAsync.shouldApplyInitialLoad()
         ) {
           dispatch({ type: "mutationFailed", error: errorMessage(error) });
         }
@@ -90,7 +88,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const runMutation = useCallback(
     async (operation: () => Promise<PublicCart | null>, opensCart = false) => {
       const cartAsync = cartAsyncRef.current!;
-      loadVersionRef.current += 1;
 
       try {
         await cartAsync.enqueueMutation(operation, {

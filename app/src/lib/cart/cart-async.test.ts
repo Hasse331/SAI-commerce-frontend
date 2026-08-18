@@ -166,3 +166,50 @@ test("a new cart orchestrator accepts a mutation before the initial load is acqu
 
   assert.equal(await mutation, "cart-from-early-mutation");
 });
+
+test("a late initial load cannot overwrite a mutation enqueued before load acquisition", async () => {
+  const initialLoad = deferred<string>();
+  const mutation = deferred<string>();
+  let displayedCart = "last-good-cart";
+  const cartAsync = createCartAsync<string>();
+  const mutationResult = cartAsync.enqueueMutation(
+    () => mutation.promise,
+    {
+      onStarted: () => undefined,
+      onSucceeded: (cart) => {
+        displayedCart = cart;
+      },
+      onFailed: () => undefined,
+    },
+  );
+  const loadResult = cartAsync.acquireInitialLoad(() => initialLoad.promise);
+
+  await Promise.resolve();
+  mutation.resolve("cart-after-mutation");
+  await mutationResult;
+  initialLoad.resolve("stale-cart-from-initial-load");
+  const loadedCart = await loadResult;
+
+  if (cartAsync.shouldApplyInitialLoad()) {
+    displayedCart = loadedCart;
+  }
+
+  assert.equal(displayedCart, "cart-after-mutation");
+  assert.equal(cartAsync.shouldApplyInitialLoad(), false);
+});
+
+test("initial load stays valid without mutations and is invalidated before or after acquisition", () => {
+  const withoutMutation = createCartAsync<string>();
+  withoutMutation.acquireInitialLoad(async () => "initial-cart");
+  assert.equal(withoutMutation.shouldApplyInitialLoad(), true);
+
+  const mutationBeforeLoad = createCartAsync<string>();
+  void mutationBeforeLoad.enqueueMutation(async () => "cart-after-mutation");
+  mutationBeforeLoad.acquireInitialLoad(async () => "initial-cart");
+  assert.equal(mutationBeforeLoad.shouldApplyInitialLoad(), false);
+
+  const mutationAfterLoad = createCartAsync<string>();
+  mutationAfterLoad.acquireInitialLoad(async () => "initial-cart");
+  void mutationAfterLoad.enqueueMutation(async () => "cart-after-mutation");
+  assert.equal(mutationAfterLoad.shouldApplyInitialLoad(), false);
+});
