@@ -96,10 +96,6 @@ const removeCartLineMutation = `
 `;
 
 function mapMutationCart(payload: ShopifyCartMutationPayload): Cart {
-  if (payload.cart) {
-    return mapShopifyCart(payload.cart);
-  }
-
   const userError = payload.userErrors[0];
 
   if (userError) {
@@ -107,6 +103,10 @@ function mapMutationCart(payload: ShopifyCartMutationPayload): Cart {
       userError.code || "CART_OPERATION_FAILED",
       userError.message || "Cart operation failed.",
     );
+  }
+
+  if (payload.cart) {
+    return mapShopifyCart(payload.cart);
   }
 
   throw new CartOperationError(
