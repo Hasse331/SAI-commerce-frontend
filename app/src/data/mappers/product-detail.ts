@@ -172,8 +172,8 @@ function mapImageSpecsSection(
 
   const specs = mapSpecsFromMetaobjectFields(
     fields,
-    productComponentFieldKeys.imageSpecsTitles,
     productComponentFieldKeys.imageSpecsTexts,
+    productComponentFieldKeys.imageSpecsTitles,
     4,
   );
 
