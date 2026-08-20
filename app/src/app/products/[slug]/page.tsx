@@ -159,12 +159,9 @@ export default async function ProductDetailRoute({
 
         <Separator />
         <Stack align="center">
-          {data.product.availableForSale ? (
+          {data.product.availableForSale && data.product.merchandiseId ? (
             <AddToCartButton
-              slug={data.product.slug}
-              title={data.product.title}
-              price={data.product.price}
-              imageUrl={data.detail.heroImage.src}
+              merchandiseId={data.product.merchandiseId}
               label={data.ctaLabel}
             />
           ) : (

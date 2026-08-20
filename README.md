@@ -42,6 +42,10 @@ SHOPIFY_STOREFRONT_API_VERSION=
 SHOPIFY_STOREFRONT_PUBLIC_TOKEN=
 ```
 
+For Headless channel setup, Storefront API configuration, deployment values,
+checkout acceptance, and credential rotation, read
+[`docs/SHOPIFY-COMMERCE-SETUP.md`](docs/SHOPIFY-COMMERCE-SETUP.md).
+
 ## Commands
 
 ```bash

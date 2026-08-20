@@ -19,8 +19,13 @@ export function mapStorefrontProductToListItem(
   hasDetails = false,
   overrideSpecs?: ProductSpecItem[],
 ): ProductSummary {
+  const defaultVariant = product.variants.nodes[0];
+
   return {
     slug: product.handle,
+    merchandiseId: defaultVariant?.availableForSale
+      ? defaultVariant.id
+      : undefined,
     hasDetails,
     availableForSale: product.availableForSale,
     categoryLabel: product.productType || "",

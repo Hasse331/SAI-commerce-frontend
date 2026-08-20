@@ -2,76 +2,157 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
+  useEffect,
   useMemo,
-  useState,
+  useReducer,
+  useRef,
   type ReactNode,
 } from "react";
-
-export interface CartItem {
-  slug: string;
-  title: string;
-  price: string;
-  imageUrl: string;
-  quantity: number;
-}
-
-interface AddCartItemInput {
-  slug: string;
-  title: string;
-  price: string;
-  imageUrl: string;
-}
+import {
+  CartClientError,
+  cartClient,
+  isCartSessionLoss,
+} from "@/lib/cart/cart-client";
+import {
+  cartStateReducer,
+  initialCartState,
+  type CartStatus,
+} from "@/lib/cart/cart-state";
+import { createCartAsync, type CartAsync } from "@/lib/cart/cart-async";
+import type { PublicCart } from "@/types/cart";
 
 interface CartContextValue {
-  items: CartItem[];
+  cart: PublicCart | null;
   itemCount: number;
+  status: CartStatus;
+  error: string | null;
   isOpen: boolean;
   openCart: () => void;
   closeCart: () => void;
-  addItem: (item: AddCartItemInput) => void;
-  removeItem: (slug: string) => void;
+  addItem: (merchandiseId: string, quantity?: number) => Promise<void>;
+  updateLine: (lineId: string, quantity: number) => Promise<void>;
+  removeLine: (lineId: string) => Promise<void>;
+  clearError: () => void;
 }
 
 const CartContext = createContext<CartContextValue | undefined>(undefined);
 
+function errorMessage(error: unknown): string {
+  return error instanceof CartClientError ? error.message : "Cart request failed.";
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([]);
-  const [isOpen, setIsOpen] = useState(false);
+  const [state, dispatch] = useReducer(cartStateReducer, initialCartState);
+  const isMountedRef = useRef(true);
+  const cartAsyncRef = useRef<CartAsync<PublicCart | null> | null>(null);
+
+  if (cartAsyncRef.current == null) {
+    cartAsyncRef.current = createCartAsync<PublicCart | null>();
+  }
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    let isActive = true;
+    const cartAsync = cartAsyncRef.current;
+
+    if (cartAsync == null) {
+      return;
+    }
+
+    void (async () => {
+      try {
+        const cart = await cartAsync.acquireInitialLoad(() => cartClient.loadCart());
+
+        if (
+          isActive &&
+          isMountedRef.current &&
+          cartAsync.shouldApplyInitialLoad()
+        ) {
+          dispatch({ type: "loadSucceeded", cart });
+        }
+      } catch (error) {
+        if (
+          isActive &&
+          isMountedRef.current &&
+          cartAsync.shouldApplyInitialLoad()
+        ) {
+          dispatch({ type: "mutationFailed", error: errorMessage(error) });
+        }
+      }
+    })();
+
+    return () => {
+      isActive = false;
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const runMutation = useCallback(
+    async (operation: () => Promise<PublicCart | null>, opensCart = false) => {
+      const cartAsync = cartAsyncRef.current!;
+
+      try {
+        await cartAsync.enqueueMutation(operation, {
+          onStarted: () => {
+            if (isMountedRef.current) {
+              dispatch({ type: "mutationStarted" });
+            }
+          },
+          onSucceeded: (cart) => {
+            if (isMountedRef.current) {
+              dispatch({ type: opensCart ? "addSucceeded" : "mutationSucceeded", cart });
+            }
+          },
+          onFailed: (error) => {
+            if (isMountedRef.current) {
+              dispatch({
+                type: isCartSessionLoss(error) ? "sessionFailed" : "mutationFailed",
+                error: errorMessage(error),
+              });
+            }
+          },
+        });
+      } catch {}
+    },
+    [],
+  );
+
+  const addItem = useCallback(
+    async (merchandiseId: string, quantity = 1) =>
+      runMutation(() => cartClient.addItem(merchandiseId, quantity), true),
+    [runMutation],
+  );
+  const updateLine = useCallback(
+    async (lineId: string, quantity: number) =>
+      runMutation(() => cartClient.updateLine(lineId, quantity)),
+    [runMutation],
+  );
+  const removeLine = useCallback(
+    async (lineId: string) => runMutation(() => cartClient.removeLine(lineId)),
+    [runMutation],
+  );
+  const openCart = useCallback(() => dispatch({ type: "opened" }), []);
+  const closeCart = useCallback(() => dispatch({ type: "closed" }), []);
+  const clearError = useCallback(() => dispatch({ type: "clearError" }), []);
+  const itemCount = state.cart?.totalQuantity ?? 0;
 
   const value = useMemo<CartContextValue>(
     () => ({
-      items,
-      itemCount: items.reduce((total, item) => total + item.quantity, 0),
-      isOpen,
-      openCart: () => setIsOpen(true),
-      closeCart: () => setIsOpen(false),
-      addItem: (item) => {
-        setItems((currentItems) => {
-          const existingItem = currentItems.find(
-            (currentItem) => currentItem.slug === item.slug,
-          );
-
-          if (!existingItem) {
-            return [...currentItems, { ...item, quantity: 1 }];
-          }
-
-          return currentItems.map((currentItem) =>
-            currentItem.slug === item.slug
-              ? { ...currentItem, quantity: currentItem.quantity + 1 }
-              : currentItem,
-          );
-        });
-
-        setIsOpen(true);
-      },
-      removeItem: (slug) => {
-        setItems((currentItems) =>
-          currentItems.filter((item) => item.slug !== slug),
-        );
-      },
+      cart: state.cart,
+      itemCount,
+      status: state.status,
+      error: state.error,
+      isOpen: state.isOpen,
+      openCart,
+      closeCart,
+      addItem,
+      updateLine,
+      removeLine,
+      clearError,
     }),
-    [isOpen, items],
+    [addItem, clearError, closeCart, itemCount, openCart, removeLine, state, updateLine],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

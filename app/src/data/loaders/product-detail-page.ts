@@ -19,7 +19,7 @@ import { seoMetaobjectFieldKeys } from "@/data/shopify/metaobjects/seo";
 
 const ctaLabel = "Buy";
 
-const productDetailPagesQuery = `
+export const productDetailPagesQuery = `
   query ProductDetailPages {
     detailPages: metaobjects(type: "${shopifyPageMetaobjects.productDetailsPage.type}", first: 50) {
       nodes {
@@ -36,6 +36,12 @@ const productDetailPagesQuery = `
               title
               description
               availableForSale
+              variants(first: 1) {
+                nodes {
+                  id
+                  availableForSale
+                }
+              }
               productType
               cardSpecsMetafield: metafield(
                 namespace: "custom"

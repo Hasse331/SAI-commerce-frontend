@@ -4,34 +4,23 @@ import { Button } from "@chakra-ui/react";
 import { useCart } from "@/components/cart/cart-provider";
 
 interface AddToCartButtonProps {
-  slug: string;
-  title: string;
-  price: string;
-  imageUrl: string;
+  merchandiseId: string;
   label: string;
 }
 
 export function AddToCartButton({
-  slug,
-  title,
-  price,
-  imageUrl,
+  merchandiseId,
   label,
 }: AddToCartButtonProps) {
-  const { addItem } = useCart();
+  const { addItem, status } = useCart();
+  const isMutating = status === "mutating";
 
   return (
     <Button
-      onClick={() =>
-        addItem({
-          slug,
-          title,
-          price,
-          imageUrl,
-        })
-      }
+      disabled={isMutating}
+      onClick={() => void addItem(merchandiseId)}
     >
-      {label}
+      {isMutating ? "Adding..." : label}
     </Button>
   );
 }

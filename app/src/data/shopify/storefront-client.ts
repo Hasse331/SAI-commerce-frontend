@@ -3,13 +3,33 @@ import {
   type StorefrontApiClient,
 } from "@shopify/storefront-api-client";
 
-let storefrontClient: StorefrontApiClient | null = null;
+export interface StorefrontRequestOptions {
+  cache?: "no-store";
+}
+
+type StorefrontCachePolicy = "revalidate" | "no-store";
+
+let storefrontContentClient: StorefrontApiClient | null = null;
+let storefrontCartClient: StorefrontApiClient | null = null;
+
+export function resolveStorefrontApiVersion(value: string | undefined): string {
+  const apiVersion = value?.trim();
+
+  if (!apiVersion) {
+    throw new Error("Missing SHOPIFY_STOREFRONT_API_VERSION");
+  }
+
+  return apiVersion;
+}
 
 export async function storefrontQuery<TData>(
   query: string,
   variables?: Record<string, unknown>,
+  options?: StorefrontRequestOptions,
 ): Promise<TData> {
-  const client = getStorefrontClient();
+  const client = getStorefrontClient(
+    options?.cache === "no-store" ? "no-store" : "revalidate",
+  );
   const { data, errors } = await client.request<TData>(query, { variables });
 
   if (errors) {
@@ -23,14 +43,34 @@ export async function storefrontQuery<TData>(
   return data;
 }
 
-function getStorefrontClient(): StorefrontApiClient {
-  if (storefrontClient) {
-    return storefrontClient;
+function applyCachePolicy(
+  init: RequestInit | undefined,
+  cachePolicy: StorefrontCachePolicy,
+): RequestInit {
+  const requestInit: RequestInit = { ...init };
+
+  if (cachePolicy === "no-store") {
+    delete requestInit.next;
+    requestInit.cache = "no-store";
+    return requestInit;
+  }
+
+  requestInit.next = { revalidate: 60 };
+  return requestInit;
+}
+
+function getStorefrontClient(
+  cachePolicy: StorefrontCachePolicy,
+): StorefrontApiClient {
+  const existingClient =
+    cachePolicy === "no-store" ? storefrontCartClient : storefrontContentClient;
+
+  if (existingClient) {
+    return existingClient;
   }
 
   const storeDomain = process.env.SHOPIFY_STORE_DOMAIN;
   const storefrontToken = process.env.SHOPIFY_STOREFRONT_PUBLIC_TOKEN;
-  const apiVersion = process.env.SHOPIFY_STOREFRONT_API_VERSION || "2025-01";
 
   if (!storeDomain) {
     throw new Error("Missing SHOPIFY_STORE_DOMAIN");
@@ -40,18 +80,25 @@ function getStorefrontClient(): StorefrontApiClient {
     throw new Error("Missing SHOPIFY_STOREFRONT_PUBLIC_TOKEN");
   }
 
-  storefrontClient = createStorefrontApiClient({
+  const apiVersion = resolveStorefrontApiVersion(
+    process.env.SHOPIFY_STOREFRONT_API_VERSION,
+  );
+
+  const client = createStorefrontApiClient({
     storeDomain,
     apiVersion,
     publicAccessToken: storefrontToken,
     clientName: "sai-commerce-frontend",
     retries: 1,
     customFetchApi: (url, init) =>
-      fetch(url, {
-        ...init,
-        next: { revalidate: 60 },
-      }),
+      fetch(url, applyCachePolicy(init, cachePolicy)),
   });
 
-  return storefrontClient;
+  if (cachePolicy === "no-store") {
+    storefrontCartClient = client;
+  } else {
+    storefrontContentClient = client;
+  }
+
+  return client;
 }
