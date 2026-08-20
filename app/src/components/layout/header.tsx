@@ -53,7 +53,17 @@ export default function Header({ hasArticles, brand }: HeaderProps) {
     <Box bg="layoutBg">
       <Container py={4}>
         <Flex h={16} alignItems="center" justifyContent="space-between">
-          <Link as={NextLink} href="/" _hover={{ textDecoration: "none" }}>
+          <Link
+            as={NextLink}
+            href="/"
+            outline="none"
+            _hover={{ textDecoration: "none" }}
+            _focusVisible={{
+              outline: "2px solid",
+              outlineColor: "accentBright",
+              outlineOffset: "4px",
+            }}
+          >
             <HStack gap={3} alignItems="center">
               {brand.logoVertical ? (
                 <Image
