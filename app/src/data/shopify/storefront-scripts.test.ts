@@ -25,7 +25,7 @@ function runStorefrontScript(
     "scripts",
     scriptName,
   );
-  const environment = {
+  const environment: NodeJS.ProcessEnv = {
     ...process.env,
     SHOPIFY_STORE_DOMAIN: "store.example",
     SHOPIFY_STOREFRONT_PUBLIC_TOKEN: "synthetic-public-token",

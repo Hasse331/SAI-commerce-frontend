@@ -14,7 +14,7 @@ const defaultVariantSelection = `
               }`;
 
 const defaultVariantSelectionPattern =
-  /variants\(first: 1\)\s*{\s*nodes\s*{\s*id\s*availableForSale\s*}\s*}/s;
+  /variants\(first: 1\)\s*{\s*nodes\s*{\s*id\s*availableForSale\s*}\s*}/;
 
 function getSelectionSet(query: string, marker: string): string {
   const markerIndex = query.indexOf(marker);

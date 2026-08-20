@@ -3,7 +3,13 @@ import test from "node:test";
 import {
   CartOperationError,
   createCartOperations,
+  type StorefrontRequest,
 } from "./operations.ts";
+import type { StorefrontRequestOptions } from "../storefront-client.ts";
+
+function createStaticRequest(response: unknown): StorefrontRequest {
+  return async <TData>() => response as TData;
+}
 
 function makeShopifyCart() {
   return {
@@ -268,12 +274,12 @@ test("cart operations send the documented cart input variables and map carts", a
   const calls: Array<{
     query: string;
     variables?: Record<string, unknown>;
-    options?: { cache: "no-store" };
+    options?: StorefrontRequestOptions;
   }> = [];
   const request = async <TData>(
     query: string,
     variables?: Record<string, unknown>,
-    options?: { cache: "no-store" },
+    options?: StorefrontRequestOptions,
   ) => {
     calls.push({ query, variables, options });
 
@@ -344,13 +350,13 @@ test("cart operations send the documented cart input variables and map carts", a
 });
 
 test("getCart returns null when Shopify has no cart", async () => {
-  const operations = createCartOperations(async () => ({ cart: null }));
+  const operations = createCartOperations(createStaticRequest({ cart: null }));
 
   assert.equal(await operations.getCart("gid://shopify/Cart/expired"), null);
 });
 
 test("throws the first Shopify cart user error as a normalized error", async () => {
-  const operations = createCartOperations(async () => ({
+  const operations = createCartOperations(createStaticRequest({
     cartLinesAdd: {
       cart: null,
       userErrors: [
@@ -376,7 +382,7 @@ test("throws the first Shopify cart user error as a normalized error", async () 
 });
 
 test("prioritizes a Shopify user error even when the mutation also returns a cart", async () => {
-  const operations = createCartOperations(async () => ({
+  const operations = createCartOperations(createStaticRequest({
     cartCreate: {
       cart: makeShopifyCart(),
       userErrors: [
@@ -397,7 +403,7 @@ test("prioritizes a Shopify user error even when the mutation also returns a car
 });
 
 test("preserves the authoritative cart and normalizes Shopify mutation warnings", async () => {
-  const operations = createCartOperations(async () => ({
+  const operations = createCartOperations(createStaticRequest({
     cartLinesAdd: {
       cart: makeShopifyCart(),
       userErrors: [],
@@ -437,7 +443,7 @@ test("preserves the authoritative cart and normalizes Shopify mutation warnings"
 });
 
 test("throws MISSING_CART_RESPONSE for a mutation with no cart or user errors", async () => {
-  const operations = createCartOperations(async () => ({
+  const operations = createCartOperations(createStaticRequest({
     cartCreate: { cart: null, userErrors: [] },
   }));
 

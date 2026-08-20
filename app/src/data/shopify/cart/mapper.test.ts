@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import type { ShopifyCart } from "./types.ts";
 import { mapShopifyCart } from "./mapper.ts";
 
-function makeShopifyCart() {
+function makeShopifyCart(): ShopifyCart {
   return {
     id: "gid://shopify/Cart/1",
     checkoutUrl: "https://store.example/cart/c/1?key=secure-key",

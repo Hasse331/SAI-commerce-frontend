@@ -85,7 +85,10 @@ async function readCartLineInput(
 async function getActiveCart(
   cartId: string | undefined,
   operations: CartLineOperations,
-) {
+): Promise<
+  | { error: Response }
+  | { cart: Cart }
+> {
   if (!cartId) {
     return { error: cartErrorResponse("CART_SESSION_MISSING", "Cart session is missing.", 409) };
   }
@@ -104,7 +107,7 @@ async function getActiveCart(
 async function handlePatchCartLine(
   request: Request,
   { cartId, operations }: CartLineRouteDependencies,
-) {
+): Promise<Response> {
   if (!cartId) {
     return cartErrorResponse("CART_SESSION_MISSING", "Cart session is missing.", 409);
   }
@@ -133,7 +136,7 @@ async function handlePatchCartLine(
 async function handleDeleteCartLine(
   request: Request,
   { cartId, operations }: CartLineRouteDependencies,
-) {
+): Promise<Response> {
   if (!cartId) {
     return cartErrorResponse("CART_SESSION_MISSING", "Cart session is missing.", 409);
   }
