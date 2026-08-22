@@ -4,13 +4,16 @@ import { isShopifyDataSource } from "../source";
 import { mapShopifyPolicies } from "../mappers/policies";
 import { getShopifyPolicies } from "../shopify/policies";
 
+type PolicyListLoader = () => Promise<StorePolicy[]>;
+type PolicyListMemoizer = (load: PolicyListLoader) => PolicyListLoader;
+
 interface PolicyLoaderDependencies {
   isShopifySource: () => boolean;
-  getShopifyPolicies: () => Promise<StorePolicy[]>;
-  memoize?: typeof cache;
+  getShopifyPolicies: PolicyListLoader;
+  memoize?: PolicyListMemoizer;
 }
 
-const identityMemoize: typeof cache = (load) => load;
+const identityMemoize: PolicyListMemoizer = (load) => load;
 
 export function createPolicyLoaders({
   isShopifySource,

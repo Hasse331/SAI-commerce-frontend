@@ -44,10 +44,10 @@ test("memoized policy loaders share one Shopify load for concurrent list and loo
     memoize: (load) => {
       let result: ReturnType<typeof load> | undefined;
 
-      return (() => {
+      return () => {
         result ??= load();
         return result;
-      }) as typeof load;
+      };
     },
   });
 
