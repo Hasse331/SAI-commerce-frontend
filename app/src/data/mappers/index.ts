@@ -7,5 +7,6 @@ export * from "./product-detail-page";
 export * from "./product-primitives";
 export * from "./products";
 export * from "./products-page";
+export * from "./policies";
 export * from "./shopify";
 export * from "./text-content-block";
