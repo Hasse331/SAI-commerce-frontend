@@ -168,8 +168,8 @@ export default async function ProductDetailRoute({
             <ContactCtaButton />
           )}
         </Stack>
+        <Separator />
       </Stack>
-      <Separator />
     </Container>
   );
 }
