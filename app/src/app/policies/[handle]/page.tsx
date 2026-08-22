@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Box, Container, Heading } from "@chakra-ui/react";
 import { getStorePolicy } from "@/data/loaders/policies";
 import { resolvePolicyPage } from "./policy-page";
+import { getPolicyArticlePresentation } from "./policy-page-presentation";
 
 type PolicyPageProps = {
   params: Promise<{ handle: string }>;
@@ -21,7 +22,6 @@ export async function generateMetadata({
   return {
     title: resolvedPolicy.metadata.title,
     alternates: { canonical: resolvedPolicy.metadata.canonical },
-    robots: resolvedPolicy.metadata.robots,
   };
 }
 
@@ -34,17 +34,21 @@ export default async function PolicyPage({ params }: PolicyPageProps) {
   }
 
   const { policy } = resolvedPolicy;
+  const articlePresentation = getPolicyArticlePresentation();
 
   return (
     <Container maxW="container.md" py={{ base: 8, md: 12 }}>
-      <Heading as="h1" size="2xl" mb={8}>
-        {policy.title}
-      </Heading>
       <Box
         as="article"
+        aria-labelledby={articlePresentation.articleLabelledBy}
         lineHeight="tall"
-        dangerouslySetInnerHTML={{ __html: policy.bodyHtml }}
-      />
+        css={articlePresentation.styles}
+      >
+        <Heading as="h1" id={articlePresentation.headingId} size="2xl" mb={8}>
+          {policy.title}
+        </Heading>
+        <Box dangerouslySetInnerHTML={{ __html: policy.bodyHtml }} />
+      </Box>
     </Container>
   );
 }

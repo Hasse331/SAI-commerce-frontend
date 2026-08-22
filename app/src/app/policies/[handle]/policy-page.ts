@@ -5,7 +5,6 @@ export interface PolicyPageResolution {
   metadata: {
     title: string;
     canonical: string;
-    robots: { index: false; follow: true };
   };
 }
 
@@ -21,7 +20,6 @@ export function resolvePolicyPage(
     metadata: {
       title: policy.title,
       canonical: policy.href,
-      robots: { index: false, follow: true },
     },
   };
 }

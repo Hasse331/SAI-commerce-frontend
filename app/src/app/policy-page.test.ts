@@ -9,13 +9,12 @@ const policy = {
   bodyHtml: "<p>Privacy details</p>",
 };
 
-test("policy route resolution provides local noindex metadata for an available policy", () => {
+test("policy route resolution provides local indexable metadata for an available policy", () => {
   assert.deepEqual(resolvePolicyPage(policy), {
     policy,
     metadata: {
       title: "Privacy policy",
       canonical: "/policies/privacy",
-      robots: { index: false, follow: true },
     },
   });
 });
