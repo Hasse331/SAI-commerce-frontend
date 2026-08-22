@@ -157,7 +157,6 @@ export default async function ProductDetailRoute({
           </>
         ) : null}
 
-        <Separator />
         <Stack align="center">
           {data.product.availableForSale && data.product.merchandiseId ? (
             <AddToCartButton
@@ -168,7 +167,6 @@ export default async function ProductDetailRoute({
             <ContactCtaButton />
           )}
         </Stack>
-        <Separator />
       </Stack>
     </Container>
   );
