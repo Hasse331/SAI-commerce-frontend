@@ -157,7 +157,6 @@ export default async function ProductDetailRoute({
           </>
         ) : null}
 
-        <Separator />
         <Stack align="center">
           {data.product.availableForSale ? (
             <AddToCartButton

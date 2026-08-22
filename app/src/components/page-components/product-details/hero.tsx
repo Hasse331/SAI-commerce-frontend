@@ -11,7 +11,7 @@ interface HeroProps {
 
 export function Hero({ product, image, ctaLabel }: HeroProps) {
   return (
-    <Stack gap={{ base: 6, md: 8 }} align="center">
+    <Stack gap={{ base: 6, md: 12 }} align="center">
       <Heading as="h1" size="4xl" textAlign="center">
         {product.title}
       </Heading>
