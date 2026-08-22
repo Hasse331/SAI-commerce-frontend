@@ -5,6 +5,15 @@ import {
   STORE_POLICIES_QUERY,
 } from "./policies.ts";
 
+function getPolicyFieldNames(policyField: string): string[] {
+  const match = STORE_POLICIES_QUERY.match(
+    new RegExp(`\\b${policyField}\\s*\\{([^{}]*)\\}`),
+  );
+
+  assert.ok(match, `Missing ${policyField} selection.`);
+  return match[1].match(/\b[A-Za-z_][A-Za-z0-9_]*\b/g) ?? [];
+}
+
 test("policy client queries only the four documented ShopPolicy fields", async () => {
   const requests: string[] = [];
   const client = createShopifyPolicyClient(async <TData>(query: string) => {
@@ -35,10 +44,10 @@ test("policy client queries only the four documented ShopPolicy fields", async (
     "shippingPolicy",
     "termsOfService",
   ]) {
-    assert.match(
-      STORE_POLICIES_QUERY,
-      new RegExp(`${policyField}\\s*\\{\\s*title\\s+body\\s+handle\\s+url\\s*\\}`),
+    assert.deepEqual(
+      getPolicyFieldNames(policyField),
+      ["title", "body", "handle", "url"],
+      `${policyField} must request only its documented fields.`,
     );
   }
-  assert.doesNotMatch(STORE_POLICIES_QUERY, /\bname\b|\bid\b|\bmetafield\b/);
 });
