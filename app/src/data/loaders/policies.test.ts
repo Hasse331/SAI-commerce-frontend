@@ -33,6 +33,34 @@ test("policy loader returns exact Shopify policy handle matches only", async () 
   assert.equal(await loaders.getStorePolicy("privacy/"), undefined);
 });
 
+test("memoized policy loaders share one Shopify load for concurrent list and lookup consumers", async () => {
+  let loadCount = 0;
+  const loaders = createPolicyLoaders({
+    isShopifySource: () => true,
+    getShopifyPolicies: async () => {
+      loadCount += 1;
+      return [policy];
+    },
+    memoize: (load) => {
+      let result: ReturnType<typeof load> | undefined;
+
+      return (() => {
+        result ??= load();
+        return result;
+      }) as typeof load;
+    },
+  });
+
+  const [policies, matchedPolicy] = await Promise.all([
+    loaders.getStorePolicies(),
+    loaders.getStorePolicy("privacy"),
+  ]);
+
+  assert.deepEqual(policies, [policy]);
+  assert.deepEqual(matchedPolicy, policy);
+  assert.equal(loadCount, 1);
+});
+
 test("policy loader propagates Shopify failures", async () => {
   const failure = new Error("Shopify unavailable");
   const loaders = createPolicyLoaders({

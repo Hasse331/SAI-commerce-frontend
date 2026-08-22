@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Box, Container, Heading } from "@chakra-ui/react";
 import { getStorePolicy } from "@/data/loaders/policies";
+import { resolvePolicyPage } from "./policy-page";
 
 type PolicyPageProps = {
   params: Promise<{ handle: string }>;
@@ -11,26 +12,28 @@ export async function generateMetadata({
   params,
 }: PolicyPageProps): Promise<Metadata> {
   const { handle } = await params;
-  const policy = await getStorePolicy(handle);
+  const resolvedPolicy = resolvePolicyPage(await getStorePolicy(handle));
 
-  if (!policy) {
+  if (!resolvedPolicy) {
     return {};
   }
 
   return {
-    title: policy.title,
-    alternates: { canonical: policy.href },
-    robots: { index: false, follow: true },
+    title: resolvedPolicy.metadata.title,
+    alternates: { canonical: resolvedPolicy.metadata.canonical },
+    robots: resolvedPolicy.metadata.robots,
   };
 }
 
 export default async function PolicyPage({ params }: PolicyPageProps) {
   const { handle } = await params;
-  const policy = await getStorePolicy(handle);
+  const resolvedPolicy = resolvePolicyPage(await getStorePolicy(handle));
 
-  if (!policy) {
+  if (!resolvedPolicy) {
     notFound();
   }
+
+  const { policy } = resolvedPolicy;
 
   return (
     <Container maxW="container.md" py={{ base: 8, md: 12 }}>
