@@ -2,6 +2,7 @@
 
 import { Button } from "@chakra-ui/react";
 import { useCart } from "@/components/cart/cart-provider";
+import { addToCartButtonPresentation } from "./add-to-cart-button-presentation";
 
 interface AddToCartButtonProps {
   merchandiseId: string;
@@ -17,6 +18,7 @@ export function AddToCartButton({
 
   return (
     <Button
+      {...addToCartButtonPresentation}
       disabled={isMutating}
       onClick={() => void addItem(merchandiseId)}
     >
