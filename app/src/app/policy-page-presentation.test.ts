@@ -8,17 +8,41 @@ test("policy article presentation supplies a named article and readable rich-tex
 
   assert.equal(presentation.headingId, "policy-page-title");
   assert.equal(presentation.articleLabelledBy, presentation.headingId);
-  assert.deepEqual(styles["& h2"], {
-    fontSize: { base: "xl", md: "2xl" },
+  assert.deepEqual(styles["& h1"], {
+    fontSize: { base: "lg", md: "xl" },
     fontWeight: "semibold",
     mt: { base: 8, md: 10 },
     mb: 4,
   });
+  assert.deepEqual(styles["& h2"], {
+    fontSize: { base: "md", md: "lg" },
+    fontWeight: "semibold",
+    mt: { base: 7, md: 9 },
+    mb: 4,
+  });
   assert.deepEqual(styles["& h3"], {
-    fontSize: { base: "lg", md: "xl" },
+    fontSize: { base: "sm", md: "md" },
     fontWeight: "semibold",
     mt: { base: 6, md: 8 },
     mb: 3,
+  });
+  assert.deepEqual(styles["& h4"], {
+    fontSize: "sm",
+    fontWeight: "semibold",
+    mt: { base: 5, md: 6 },
+    mb: 2,
+  });
+  assert.deepEqual(styles["& h5"], {
+    fontSize: "sm",
+    fontWeight: "semibold",
+    mt: { base: 4, md: 5 },
+    mb: 2,
+  });
+  assert.deepEqual(styles["& h6"], {
+    fontSize: "xs",
+    fontWeight: "semibold",
+    mt: { base: 4, md: 5 },
+    mb: 2,
   });
   assert.deepEqual(styles["& p"], { mb: { base: 4, md: 5 } });
   assert.deepEqual(styles["& ul, & ol"], {

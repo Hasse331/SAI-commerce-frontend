@@ -11,17 +11,41 @@ export function getPolicyArticlePresentation(): PolicyArticlePresentation {
     headingId: "policy-page-title",
     articleLabelledBy: "policy-page-title",
     styles: {
-      "& h2": {
-        fontSize: { base: "xl", md: "2xl" },
+      "& h1": {
+        fontSize: { base: "lg", md: "xl" },
         fontWeight: "semibold",
         mt: { base: 8, md: 10 },
         mb: 4,
       },
+      "& h2": {
+        fontSize: { base: "md", md: "lg" },
+        fontWeight: "semibold",
+        mt: { base: 7, md: 9 },
+        mb: 4,
+      },
       "& h3": {
-        fontSize: { base: "lg", md: "xl" },
+        fontSize: { base: "sm", md: "md" },
         fontWeight: "semibold",
         mt: { base: 6, md: 8 },
         mb: 3,
+      },
+      "& h4": {
+        fontSize: "sm",
+        fontWeight: "semibold",
+        mt: { base: 5, md: 6 },
+        mb: 2,
+      },
+      "& h5": {
+        fontSize: "sm",
+        fontWeight: "semibold",
+        mt: { base: 4, md: 5 },
+        mb: 2,
+      },
+      "& h6": {
+        fontSize: "xs",
+        fontWeight: "semibold",
+        mt: { base: 4, md: 5 },
+        mb: 2,
       },
       "& p": { mb: { base: 4, md: 5 } },
       "& ul, & ol": {
