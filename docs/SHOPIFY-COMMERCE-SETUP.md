@@ -51,7 +51,7 @@ trackers, build output, screenshots, logs, or this guide.
 NEXT_PUBLIC_DATA_SOURCE=shopify
 SHOPIFY_STORE_DOMAIN=
 SHOPIFY_STOREFRONT_PUBLIC_TOKEN=
-SHOPIFY_STOREFRONT_API_VERSION=2026-07
+SHOPIFY_STOREFRONT_API_VERSION=2026-01
 ```
 
 `SHOPIFY_STORE_DOMAIN` is the Shopify store domain in the form
@@ -67,21 +67,37 @@ Storefront token is intended for browser/mobile storefront access and is not
 Admin API access; nevertheless, protect all credentials and do not commit them.
 
 Always set `SHOPIFY_STOREFRONT_API_VERSION` explicitly to a supported stable
-version. At the time of this guide (2026-08-18), `2026-07` is Shopify's latest
-stable Storefront API version. Shopify recommends explicitly selecting a
+version. This project uses `2026-01`. Shopify recommends explicitly selecting a
 version and publishes its quarterly support schedule in [API
 versioning](https://shopify.dev/docs/api/usage/versioning). The runtime requires
 a nonblank `SHOPIFY_STOREFRONT_API_VERSION` and fails clearly when it is omitted;
-it has no version fallback. Set `2026-07` for this deployment, review the chosen
+it has no version fallback. Set `2026-01` for this deployment, review the chosen
 stable version at least quarterly, and update it before Shopify support changes.
 This documentation does not claim that the cart queries have been live-validated
-against `2026-07`: the acceptance test below is required before release.
+against `2026-01`: the acceptance test below is required before release.
 
 For Vercel deployments, add the values in **Project > Settings > Environment
 Variables** and select the correct target. Put test-store/test-token values in
 **Preview** and live-store/live-token values in **Production**; do not promote a
 preview configuration to production without a live checkout acceptance test.
 Redeploy after changing any server environment variable.
+
+## Store policies
+
+In **Settings > Policies**, add and publish the merchant-approved content for
+**Privacy**, **Refund**, **Shipping**, and **Terms of Service**. The storefront
+reads these four Shopify-managed policies and publishes an available policy at
+its local `/policies/[handle]` page. Storefront policy content is cached for
+approximately 60 seconds, so allow for that delay after saving a policy before
+checking the deployed page.
+
+Missing or blank policies are omitted from local pages, the footer, sitemap,
+and the pre-checkout disclosure. The application never replaces a missing policy
+with hardcoded legal text.
+
+The merchant and legal owner remain responsible for policy content, languages,
+markets, and obtaining appropriate legal review. This software behavior is not
+legal advice or a compliance guarantee.
 
 ## Release acceptance test
 
@@ -108,6 +124,24 @@ cart ID, checkout URL, buyer data, or credential in test notes or output.
    attribution is channel-level in [Manage the Headless
    channel](https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api/manage-headless-channels).
 7. Disable test mode or the Bogus Gateway before enabling real-card orders.
+
+## Policy publishing Preview/UAT
+
+Use the Preview deployment after the storefront content-cache delay and record
+only safe, non-sensitive evidence.
+
+1. For every available policy, open its local `/policies/[handle]` page and
+   confirm the Shopify title and policy content are shown.
+2. Confirm the footer's **Policies** group contains exactly the available local
+   policy links, in the expected Shopify order; it must not appear when no
+   policies are available.
+3. Add an item to the cart and confirm both the cart sidebar and `/cart` show
+   the Shopify-hosted checkout disclosure with the same available local policy
+   links immediately before **Proceed to checkout**.
+4. Continue to Shopify checkout and confirm Shopify-hosted policy links are
+   present and lead to the applicable Shopify-managed policies.
+5. Never record credentials, buyer data, cart IDs, or checkout URLs in UAT
+   evidence, screenshots, logs, or issue trackers.
 
 ## Public Storefront token replacement and recovery
 
@@ -151,8 +185,6 @@ inventory, payment mode, markets, shipping, and tax setup. Do not construct a
 checkout URL, substitute mock data in Shopify mode, or expose a private token
 as a recovery measure.
 
-## Out of scope
+## Scope boundary
 
-Legal policy pages and cookie-consent controls are Phase 2 work. This release
-does not represent them as complete, and it does not hardcode policy links
-before their routes exist.
+Cookie-consent controls remain explicitly planned for Phase 3.
