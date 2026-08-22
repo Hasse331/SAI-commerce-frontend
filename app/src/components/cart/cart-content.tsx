@@ -28,7 +28,7 @@ function CartLoadingSkeleton() {
 }
 
 export function CartContent() {
-  const { cart, clearError, error, status } = useCart();
+  const { cart, clearError, error, policyLinks, status } = useCart();
 
   if (status === "loading") {
     return <CartLoadingSkeleton />;
@@ -88,7 +88,7 @@ export function CartContent() {
             </HStack>
           </Box>
 
-          <CheckoutButton cart={cart} status={status} />
+          <CheckoutButton cart={cart} status={status} policies={policyLinks} />
         </>
       )}
     </Stack>

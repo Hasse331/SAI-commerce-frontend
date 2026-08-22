@@ -14,9 +14,11 @@ import { CartProvider } from "@/components/cart/cart-provider";
 import { CartSidebar } from "@/components/cart/cart-sidebar";
 import { hasArticlesContent } from "@/data/loaders/articles";
 import { getBrandData } from "@/data/loaders/brand-loader";
+import { getStorePolicies } from "@/data/loaders/policies";
 import { getFixloopProjectName } from "@/lib/fixloop/env";
 import { hasFixloopEnabled } from "@/lib/fixloop/env";
 import { buildPageTitle, getMetadataBase, isProductionSite } from "@/lib/seo";
+import type { PolicyLink } from "@/types/policies";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -99,8 +101,16 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const hasArticles = await hasArticlesContent();
-  const brand = await getBrandData();
+  const [hasArticles, brand, policies] = await Promise.all([
+    hasArticlesContent(),
+    getBrandData(),
+    getStorePolicies(),
+  ]);
+  const policyLinks: PolicyLink[] = policies.map(({ handle, title, href }) => ({
+    handle,
+    title,
+    href,
+  }));
   const fixloopProjectName = getFixloopProjectName();
   const hasFixloop = hasFixloopEnabled();
   const shell = (
@@ -113,7 +123,7 @@ export default async function RootLayout({
         display="flex"
         flexDirection="column"
       >
-        <CartProvider>
+        <CartProvider policyLinks={policyLinks}>
           <Header hasArticles={hasArticles} brand={brand} />
           <Separator />
           <Box as="main" flex="1">

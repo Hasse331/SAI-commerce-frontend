@@ -22,12 +22,14 @@ import {
 } from "@/lib/cart/cart-state";
 import { createCartAsync, type CartAsync } from "@/lib/cart/cart-async";
 import type { PublicCart } from "@/types/cart";
+import type { PolicyLink } from "@/types/policies";
 
 interface CartContextValue {
   cart: PublicCart | null;
   itemCount: number;
   status: CartStatus;
   error: string | null;
+  policyLinks: PolicyLink[];
   isOpen: boolean;
   openCart: () => void;
   closeCart: () => void;
@@ -43,7 +45,13 @@ function errorMessage(error: unknown): string {
   return error instanceof CartClientError ? error.message : "Cart request failed.";
 }
 
-export function CartProvider({ children }: { children: ReactNode }) {
+export function CartProvider({
+  children,
+  policyLinks,
+}: {
+  children: ReactNode;
+  policyLinks: PolicyLink[];
+}) {
   const [state, dispatch] = useReducer(cartStateReducer, initialCartState);
   const isMountedRef = useRef(true);
   const cartAsyncRef = useRef<CartAsync<PublicCart | null> | null>(null);
@@ -144,6 +152,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       itemCount,
       status: state.status,
       error: state.error,
+      policyLinks,
       isOpen: state.isOpen,
       openCart,
       closeCart,
@@ -152,7 +161,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
       removeLine,
       clearError,
     }),
-    [addItem, clearError, closeCart, itemCount, openCart, removeLine, state, updateLine],
+    [
+      addItem,
+      clearError,
+      closeCart,
+      itemCount,
+      openCart,
+      policyLinks,
+      removeLine,
+      state,
+      updateLine,
+    ],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

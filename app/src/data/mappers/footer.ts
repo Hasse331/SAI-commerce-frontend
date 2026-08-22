@@ -1,15 +1,18 @@
 import { footerLabels } from "@/data/contents/footer-labels";
 import type { FooterLinkGroup, FooterLinkItem } from "@/types/footer";
+import type { PolicyLink } from "@/types/policies";
 import type { ProductSummary } from "@/types/products";
 
 interface BuildFooterLinkGroupsInput {
   navigationLinks: FooterLinkItem[];
   products: ProductSummary[];
+  policies: PolicyLink[];
 }
 
 export function buildFooterLinkGroups({
   navigationLinks,
   products,
+  policies,
 }: BuildFooterLinkGroupsInput): FooterLinkGroup[] {
   const productLinks = products
     .filter((product) => product.hasDetails)
@@ -33,6 +36,10 @@ export function buildFooterLinkGroups({
       title: footerLabels.products,
       links: resolvedProductLinks,
     },
+    createFooterLinkGroup(
+      "Policies",
+      policies.map((policy) => ({ label: policy.title, href: policy.href })),
+    ),
   ].filter((group): group is FooterLinkGroup => Boolean(group));
 }
 

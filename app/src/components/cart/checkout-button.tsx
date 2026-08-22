@@ -1,10 +1,14 @@
-import { Button, Stack, Text } from "@chakra-ui/react";
+import { Button, HStack, Link as ChakraLink, Stack, Text } from "@chakra-ui/react";
+import NextLink from "next/link";
 import type { CartStatus } from "@/lib/cart/cart-state";
 import type { PublicCart } from "@/types/cart";
+import type { PolicyLink } from "@/types/policies";
+import { getCheckoutDisclosure } from "./checkout-disclosure";
 
 interface CheckoutButtonProps {
   cart: PublicCart | null;
   status: CartStatus;
+  policies: PolicyLink[];
 }
 
 export function getCheckoutHref(cart: PublicCart | null): string | null {
@@ -30,8 +34,9 @@ export function getCheckoutHref(cart: PublicCart | null): string | null {
   return cart.checkoutUrl;
 }
 
-export function CheckoutButton({ cart, status }: CheckoutButtonProps) {
+export function CheckoutButton({ cart, status, policies }: CheckoutButtonProps) {
   const checkoutHref = getCheckoutHref(cart);
+  const disclosure = getCheckoutDisclosure(policies);
 
   if (checkoutHref === null || status === "mutating") {
     return null;
@@ -39,6 +44,20 @@ export function CheckoutButton({ cart, status }: CheckoutButtonProps) {
 
   return (
     <Stack gap={3}>
+      {disclosure ? (
+        <Stack gap={2}>
+          <Text fontSize="sm" color="fgMuted">
+            {disclosure.message}
+          </Text>
+          <HStack gap={3} flexWrap="wrap">
+            {disclosure.links.map((link) => (
+              <ChakraLink asChild key={link.href} color="accentBright">
+                <NextLink href={link.href}>{link.label}</NextLink>
+              </ChakraLink>
+            ))}
+          </HStack>
+        </Stack>
+      ) : null}
       <Button asChild w="full">
         <a href={checkoutHref}>Proceed to checkout</a>
       </Button>
