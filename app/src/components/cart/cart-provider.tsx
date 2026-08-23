@@ -23,6 +23,7 @@ import {
 import { createCartAsync, type CartAsync } from "@/lib/cart/cart-async";
 import type { PublicCart } from "@/types/cart";
 import type { PolicyLink } from "@/types/policies";
+import { announceCartChange } from "@/data/shopify/analytics/events";
 
 interface CartContextValue {
   cart: PublicCart | null;
@@ -55,6 +56,7 @@ export function CartProvider({
   const [state, dispatch] = useReducer(cartStateReducer, initialCartState);
   const isMountedRef = useRef(true);
   const cartAsyncRef = useRef<CartAsync<PublicCart | null> | null>(null);
+  const cartRef = useRef<PublicCart | null>(null);
 
   if (cartAsyncRef.current == null) {
     cartAsyncRef.current = createCartAsync<PublicCart | null>();
@@ -78,6 +80,7 @@ export function CartProvider({
           isMountedRef.current &&
           cartAsync.shouldApplyInitialLoad()
         ) {
+          cartRef.current = cart;
           dispatch({ type: "loadSucceeded", cart });
         }
       } catch (error) {
@@ -110,6 +113,12 @@ export function CartProvider({
           },
           onSucceeded: (cart) => {
             if (isMountedRef.current) {
+              announceCartChange({
+                kind: opensCart ? "add" : "update",
+                cart,
+                previousCart: cartRef.current,
+              });
+              cartRef.current = cart;
               dispatch({ type: opensCart ? "addSucceeded" : "mutationSucceeded", cart });
             }
           },

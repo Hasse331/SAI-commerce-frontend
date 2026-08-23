@@ -13,6 +13,8 @@ import { getBrandData } from "@/data/loaders/brand-loader";
 import { getStorePolicies } from "@/data/loaders/policies";
 import { buildPageTitle, getMetadataBase, isProductionSite } from "@/lib/seo";
 import type { PolicyLink } from "@/types/policies";
+import { getShopifyAnalyticsConfig } from "@/data/shopify/analytics/config";
+import { ShopifyAnalyticsRuntime } from "@/data/shopify/analytics/runtime";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -105,6 +107,7 @@ export default async function RootLayout({
     title,
     href,
   }));
+  const analyticsConfig = getShopifyAnalyticsConfig();
   const shell = (
     <Provider>
       <Box
@@ -135,6 +138,7 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${playfairDisplay.variable}`}
       >
         {shell}
+        {analyticsConfig ? <ShopifyAnalyticsRuntime config={analyticsConfig} /> : null}
       </body>
     </html>
   );

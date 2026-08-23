@@ -12,6 +12,7 @@ import { LargeImage } from "@/components/page-components/product-details/large-i
 import { getProductDetailPageData } from "@/data/loaders/product-detail-page";
 import { TextContentBlock } from "@/components/page-components/shared/text-content-block";
 import { buildPageTitle, createMetadata, resolvePageSeo } from "@/lib/seo";
+import { ShopifyProductView } from "@/data/shopify/analytics/product-view";
 
 interface ProductDetailRouteProps {
   params: Promise<{
@@ -83,6 +84,7 @@ export default async function ProductDetailRoute({
 
   return (
     <Container maxW="8xl">
+      <ShopifyProductView product={data.product} />
       <Stack gap={{ base: 16, md: 24 }} py={{ base: 10, md: 14 }}>
         <Hero
           product={data.product}
