@@ -7,7 +7,6 @@ import {
   Stack,
   Image,
 } from "@chakra-ui/react";
-import { ReportProblemButton } from "@hansimb/fix-loop-widget";
 import type { BrandData } from "@/types/brand";
 import { footerLabels } from "@/data/contents/footer-labels";
 import { getFooterData } from "@/data/loaders/footer";
@@ -15,13 +14,9 @@ import Link from "next/link";
 
 interface FooterProps {
   brand: BrandData;
-  showReportProblemButton?: boolean;
 }
 
-export default async function Footer({
-  brand,
-  showReportProblemButton = false,
-}: FooterProps) {
+export default async function Footer({ brand }: FooterProps) {
   const footerData = await getFooterData();
 
   return (
@@ -82,11 +77,6 @@ export default async function Footer({
 
           <Separator mt={10} />
           <Stack pt={8} gap={3} align="center">
-            {showReportProblemButton ? (
-              <ReportProblemButton mode="embedded" appearance="text">
-                Report a problem
-              </ReportProblemButton>
-            ) : null}
             <Text textAlign="center">
               © Copyright {new Date().getFullYear()} {brand.name}
             </Text>

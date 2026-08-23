@@ -1,8 +1,4 @@
 import type { Metadata } from "next";
-import {
-  AgenticFixLoopProvider,
-  ReportProblemModal,
-} from "@hansimb/fix-loop-widget";
 import { Geist, Geist_Mono, Playfair_Display } from "next/font/google";
 import { Provider } from "@/components/ui/provider";
 import Header from "@/components/layout/header";
@@ -15,8 +11,6 @@ import { CartSidebar } from "@/components/cart/cart-sidebar";
 import { hasArticlesContent } from "@/data/loaders/articles";
 import { getBrandData } from "@/data/loaders/brand-loader";
 import { getStorePolicies } from "@/data/loaders/policies";
-import { getFixloopProjectName } from "@/lib/fixloop/env";
-import { hasFixloopEnabled } from "@/lib/fixloop/env";
 import { buildPageTitle, getMetadataBase, isProductionSite } from "@/lib/seo";
 import type { PolicyLink } from "@/types/policies";
 
@@ -111,8 +105,6 @@ export default async function RootLayout({
     title,
     href,
   }));
-  const fixloopProjectName = getFixloopProjectName();
-  const hasFixloop = hasFixloopEnabled();
   const shell = (
     <Provider>
       <Box
@@ -130,14 +122,10 @@ export default async function RootLayout({
             {children}
           </Box>
           <Separator />
-          <Footer
-            brand={brand}
-            showReportProblemButton={hasFixloop}
-          />
+          <Footer brand={brand} />
           <CartSidebar />
         </CartProvider>
       </Box>
-      {hasFixloop ? <ReportProblemModal /> : null}
     </Provider>
   );
 
@@ -146,13 +134,7 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${playfairDisplay.variable}`}
       >
-        {hasFixloop && fixloopProjectName ? (
-          <AgenticFixLoopProvider projectName={fixloopProjectName}>
-            {shell}
-          </AgenticFixLoopProvider>
-        ) : (
-          shell
-        )}
+        {shell}
       </body>
     </html>
   );
