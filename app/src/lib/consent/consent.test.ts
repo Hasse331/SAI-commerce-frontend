@@ -111,6 +111,44 @@ test("missing, malformed, wrong-version, and expired cookies have no decision", 
   assert.equal(parseConsentCookie(expired, new Date("2027-02-19T12:00:00.001Z")), null);
 });
 
+test("future-dated decisions and decisions lasting more than 180 days are rejected", () => {
+  const categories = { necessary: true, analytics: true, preferences: false, marketing: false };
+  const futureDated = encodeURIComponent(JSON.stringify({
+    version: CONSENT_VERSION,
+    decidedAt: "2026-08-23T12:00:00.001Z",
+    expiresAt: "2027-02-19T12:00:00.001Z",
+    categories,
+  }));
+  const overlong = encodeURIComponent(JSON.stringify({
+    version: CONSENT_VERSION,
+    decidedAt: "2026-08-23T12:00:00.000Z",
+    expiresAt: "2027-02-19T12:00:00.001Z",
+    categories,
+  }));
+
+  assert.equal(parseConsentCookie(`sai_consent=${futureDated}`, now), null);
+  assert.equal(parseConsentCookie(`sai_consent=${overlong}`, now), null);
+});
+
+test("decisions with disabled necessary or nonboolean optional categories are rejected", () => {
+  const base = {
+    version: CONSENT_VERSION,
+    decidedAt: "2026-08-23T12:00:00.000Z",
+    expiresAt: "2027-02-19T12:00:00.000Z",
+  };
+  const disabledNecessary = encodeURIComponent(JSON.stringify({
+    ...base,
+    categories: { necessary: false, analytics: false, preferences: false, marketing: false },
+  }));
+  const nonbooleanAnalytics = encodeURIComponent(JSON.stringify({
+    ...base,
+    categories: { necessary: true, analytics: "yes", preferences: false, marketing: false },
+  }));
+
+  assert.equal(parseConsentCookie(`sai_consent=${disabledNecessary}`, now), null);
+  assert.equal(parseConsentCookie(`sai_consent=${nonbooleanAnalytics}`, now), null);
+});
+
 test("category gates always allow necessary and require a current grant for optional use", () => {
   const accepted = acceptAll(createInitialConsentState(), now).decision;
 

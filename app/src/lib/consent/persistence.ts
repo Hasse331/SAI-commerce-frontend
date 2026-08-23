@@ -1,4 +1,9 @@
-import { CONSENT_VERSION, type ConsentCategories, type ConsentDecision } from "./domain";
+import {
+  CONSENT_DURATION_MS,
+  CONSENT_VERSION,
+  type ConsentCategories,
+  type ConsentDecision,
+} from "./domain";
 
 export const CONSENT_COOKIE_NAME = "sai_consent";
 export const CONSENT_COOKIE_MAX_AGE_SECONDS = 180 * 24 * 60 * 60;
@@ -26,7 +31,13 @@ export function isCurrentConsentDecision(value: unknown, now = new Date()): valu
 
   const decidedAt = Date.parse(decision.decidedAt);
   const expiresAt = Date.parse(decision.expiresAt);
-  return Number.isFinite(decidedAt) && Number.isFinite(expiresAt) && decidedAt < expiresAt && now.getTime() < expiresAt;
+  return (
+    Number.isFinite(decidedAt) &&
+    Number.isFinite(expiresAt) &&
+    decidedAt <= now.getTime() &&
+    expiresAt - decidedAt === CONSENT_DURATION_MS &&
+    now.getTime() < expiresAt
+  );
 }
 
 export function parseConsentCookie(cookieHeader: string | undefined, now = new Date()): ConsentDecision | null {
