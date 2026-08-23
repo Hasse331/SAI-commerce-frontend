@@ -53,9 +53,15 @@ test("reject optional disables every optional category", () => {
 });
 
 test("customize saves only requested optional categories and cannot disable necessary", () => {
+  const untrustedCategories = {
+    necessary: false,
+    analytics: true,
+    preferences: false,
+    marketing: true,
+  } as unknown as Parameters<typeof customizeConsent>[1];
   const state = customizeConsent(
     createInitialConsentState(),
-    { necessary: false, analytics: true, preferences: false, marketing: true },
+    untrustedCategories,
     now,
   );
 
