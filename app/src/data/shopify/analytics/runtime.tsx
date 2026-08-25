@@ -1,41 +1,25 @@
 "use client";
 
-import { AnalyticsEvent } from "@shopify/hydrogen";
+import { AnalyticsEvent, type PageViewPayload, type ProductViewPayload } from "@shopify/hydrogen";
 import { ShopifyScripts } from "@shopify/hydrogen/react";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import type { ConsentDecision } from "@/lib/consent";
-import { createEventDeduper, isAnalyticsReady, mapConsentToShopify, mapProductView, type NormalizedAnalyticsProduct } from "./adapter";
-import { CART_CHANGED_EVENT, CONSENT_CHANGED_EVENT, getLatestProductView, PRODUCT_VIEWED_EVENT } from "./events";
+import { consentSignalAction, createBoundedCompletion, createEventDeduper, createPrivacySynchronizer, isAnalyticsPublisherReady, mapConsentToShopify, mapProductView, type NormalizedAnalyticsProduct } from "./adapter";
+import { CONSENT_CHANGED_EVENT, CONSENT_HYDRATED_EVENT, CONSENT_PERSISTENCE_FAILURE_EVENT, getLatestHydratedConsent, getLatestProductView, PRODUCT_VIEWED_EVENT } from "./events";
 import type { ShopifyAnalyticsConfig } from "./config";
 
 type PrivacyApi = NonNullable<Window["Shopify"]>["customerPrivacy"];
+const MAX_PRIVACY_READINESS_ATTEMPTS = 20;
+const PRIVACY_READINESS_INTERVAL_MS = 250;
+const PRIVACY_CALLBACK_TIMEOUT_MS = 200;
 
-function publishIfAllowed(
-  event: Parameters<NonNullable<NonNullable<Window["Shopify"]>["analytics"]>["publish"]>[0],
-  payload: object,
-) {
-  const shopify = window.Shopify;
-  if (!isAnalyticsReady(true, shopify?.customerPrivacy)) return;
-  shopify?.analytics?.publish(event, payload as never);
+function publishPage(payload: PageViewPayload): void {
+  window.Shopify?.analytics?.publish(AnalyticsEvent.PAGE_VIEWED, payload);
 }
 
-function synchronizeConsent(
-  decision: ConsentDecision,
-  privacy: PrivacyApi | undefined,
-  onSynchronized: () => void,
-): void {
-  if (!privacy || typeof privacy.setTrackingConsent !== "function") return;
-  try {
-    privacy.setTrackingConsent(mapConsentToShopify(decision.categories), (result) => {
-      if (!result?.error) {
-        document.dispatchEvent(new CustomEvent("visitorConsentCollected", { detail: { source: "interaction" } }));
-        onSynchronized();
-      }
-    });
-  } catch {
-    // Shopify remains fail-closed when its privacy runtime is unavailable.
-  }
+function publishProduct(payload: ProductViewPayload): void {
+  window.Shopify?.analytics?.publish(AnalyticsEvent.PRODUCT_VIEWED, payload);
 }
 
 export function ShopifyAnalyticsRuntime({ config }: { config: ShopifyAnalyticsConfig }) {
@@ -43,48 +27,141 @@ export function ShopifyAnalyticsRuntime({ config }: { config: ShopifyAnalyticsCo
   const localAnalyticsGranted = useRef(false);
   const deduper = useRef(createEventDeduper());
   const currentProduct = useRef<NormalizedAnalyticsProduct | null>(null);
+  const didInitializeHydration = useRef(false);
+  const synchronizer = useRef(createPrivacySynchronizer<ConsentDecision>((decision) =>
+    JSON.stringify(decision.categories),
+  ));
+
+  const publishCurrentPage = useCallback(() => {
+    if (!isAnalyticsPublisherReady(localAnalyticsGranted.current, window.Shopify?.customerPrivacy, window.Shopify?.analytics)) return;
+    if (deduper.current.shouldPublish("page", pathname)) {
+      publishPage({ url: window.location.href });
+    }
+  }, [pathname]);
+
+  const publishCurrentProduct = useCallback(() => {
+    const product = currentProduct.current;
+    if (!product || !isAnalyticsPublisherReady(localAnalyticsGranted.current, window.Shopify?.customerPrivacy, window.Shopify?.analytics)) return;
+    if (deduper.current.shouldPublish("product", `${product.variantId}:${pathname}`)) {
+      publishProduct(mapProductView(product));
+    }
+  }, [pathname]);
 
   useEffect(() => {
     currentProduct.current = getLatestProductView();
-    const onConsent = (event: Event) => {
-      const decision = (event as CustomEvent<ConsentDecision>).detail;
-      localAnalyticsGranted.current = decision.categories.analytics;
-      synchronizeConsent(decision, window.Shopify?.customerPrivacy, () => {
-        if (!decision.categories.analytics) return;
-        publishIfAllowed(AnalyticsEvent.PAGE_VIEWED, { url: window.location.href });
-        if (currentProduct.current) {
-          publishIfAllowed(AnalyticsEvent.PRODUCT_VIEWED, mapProductView(currentProduct.current));
+    if (!didInitializeHydration.current) {
+      didInitializeHydration.current = true;
+      const hydratedDecision = getLatestHydratedConsent();
+      if (hydratedDecision) {
+        localAnalyticsGranted.current = hydratedDecision.categories.analytics;
+        publishCurrentPage();
+        publishCurrentProduct();
+      }
+    }
+    let readinessTimer: ReturnType<typeof setInterval> | undefined;
+    const callbackTimers = new Map<ReturnType<typeof setTimeout>, () => void>();
+    let attempts = 0;
+
+    const clearReadinessTimer = () => {
+      if (readinessTimer !== undefined) clearInterval(readinessTimer);
+      readinessTimer = undefined;
+    };
+    const trySynchronize = () => {
+      attempts += 1;
+      const privacy: PrivacyApi | undefined = window.Shopify?.customerPrivacy;
+      const ready = privacy?.consentStatus === "loaded" && typeof privacy.setTrackingConsent === "function";
+      synchronizer.current.flush(ready, (decision, complete) => {
+        const completion = createBoundedCompletion(
+          complete,
+          (onTimeout) => {
+            const timer = setTimeout(() => {
+              callbackTimers.delete(timer);
+              onTimeout();
+            }, PRIVACY_CALLBACK_TIMEOUT_MS);
+            callbackTimers.set(timer, onTimeout);
+            return timer;
+          },
+          (timer) => {
+            clearTimeout(timer as ReturnType<typeof setTimeout>);
+            callbackTimers.delete(timer as ReturnType<typeof setTimeout>);
+          },
+        );
+        try {
+          privacy!.setTrackingConsent(mapConsentToShopify(decision.categories), (result) => {
+            const succeeded = !result?.error;
+            if (completion.complete(succeeded) && succeeded) {
+              clearReadinessTimer();
+              document.dispatchEvent(new CustomEvent("visitorConsentCollected", { detail: { source: "interaction" } }));
+              publishCurrentPage();
+              publishCurrentProduct();
+            }
+          });
+        } catch {
+          completion.complete(false);
         }
       });
+      if (attempts >= MAX_PRIVACY_READINESS_ATTEMPTS) clearReadinessTimer();
+    };
+    const onConsent = (event: Event) => {
+      const decision = (event as CustomEvent<ConsentDecision>).detail;
+      const action = consentSignalAction("explicit", decision.categories.analytics);
+      localAnalyticsGranted.current = action.analyticsGranted;
+      synchronizer.current.enqueue(decision);
+      attempts = 0;
+      clearReadinessTimer();
+      readinessTimer = setInterval(trySynchronize, PRIVACY_READINESS_INTERVAL_MS);
+      trySynchronize();
+    };
+    const onHydratedConsent = (event: Event) => {
+      const decision = (event as CustomEvent<ConsentDecision>).detail;
+      const action = consentSignalAction("hydrated", decision.categories.analytics);
+      localAnalyticsGranted.current = action.analyticsGranted;
+      publishCurrentPage();
+      publishCurrentProduct();
+    };
+    const onConsentPersistenceFailure = () => {
+      const action = consentSignalAction("persistenceFailure", false);
+      localAnalyticsGranted.current = action.analyticsGranted;
+      synchronizer.current = createPrivacySynchronizer<ConsentDecision>((decision) =>
+        JSON.stringify(decision.categories),
+      );
+      clearReadinessTimer();
     };
     const onProduct = (event: Event) => {
-      if (!localAnalyticsGranted.current) return;
-      const product = (event as CustomEvent<NormalizedAnalyticsProduct>).detail;
-      currentProduct.current = product;
-      const key = `product:${product.merchandiseId}:${pathname}`;
-      if (deduper.current.shouldPublish(key)) publishIfAllowed(AnalyticsEvent.PRODUCT_VIEWED, mapProductView(product));
+      currentProduct.current = (event as CustomEvent<NormalizedAnalyticsProduct | null>).detail;
+      publishCurrentProduct();
     };
-    const onCart = (event: Event) => {
-      if (!localAnalyticsGranted.current) return;
-      const detail = (event as CustomEvent<{ kind: "add" | "update"; cart: unknown; previousCart: unknown }>).detail;
-      publishIfAllowed(AnalyticsEvent.CART_UPDATED, { cart: detail.cart, prevCart: detail.previousCart });
-      if (detail.kind === "add") publishIfAllowed(AnalyticsEvent.PRODUCT_ADD_TO_CART, { cart: detail.cart, prevCart: detail.previousCart });
+    const onPrivacyReadySignal = () => {
+      trySynchronize();
+      publishCurrentPage();
+      publishCurrentProduct();
     };
     window.addEventListener(CONSENT_CHANGED_EVENT, onConsent);
+    window.addEventListener(CONSENT_HYDRATED_EVENT, onHydratedConsent);
+    window.addEventListener(CONSENT_PERSISTENCE_FAILURE_EVENT, onConsentPersistenceFailure);
     window.addEventListener(PRODUCT_VIEWED_EVENT, onProduct);
-    window.addEventListener(CART_CHANGED_EVENT, onCart);
+    const consentScript = document.getElementById("shopify-consent");
+    consentScript?.addEventListener("load", onPrivacyReadySignal);
+    document.addEventListener("visitorConsentCollected", onPrivacyReadySignal);
     return () => {
+      clearReadinessTimer();
+      callbackTimers.forEach((onTimeout, timer) => {
+        clearTimeout(timer);
+        onTimeout();
+      });
+      callbackTimers.clear();
       window.removeEventListener(CONSENT_CHANGED_EVENT, onConsent);
+      window.removeEventListener(CONSENT_HYDRATED_EVENT, onHydratedConsent);
+      window.removeEventListener(CONSENT_PERSISTENCE_FAILURE_EVENT, onConsentPersistenceFailure);
       window.removeEventListener(PRODUCT_VIEWED_EVENT, onProduct);
-      window.removeEventListener(CART_CHANGED_EVENT, onCart);
+      consentScript?.removeEventListener("load", onPrivacyReadySignal);
+      document.removeEventListener("visitorConsentCollected", onPrivacyReadySignal);
     };
-  }, [pathname]);
+  }, [publishCurrentPage, publishCurrentProduct]);
 
   useEffect(() => {
-    if (!localAnalyticsGranted.current) return;
-    const key = `page:${pathname}`;
-    if (deduper.current.shouldPublish(key)) publishIfAllowed(AnalyticsEvent.PAGE_VIEWED, { url: window.location.href });
-  }, [pathname]);
+    publishCurrentPage();
+  }, [publishCurrentPage]);
 
   return <ShopifyScripts shop={config} analytics={{ channel: "hydrogen" }} consent={{ mode: "custom-banner" }} webMcp={false} />;
 }

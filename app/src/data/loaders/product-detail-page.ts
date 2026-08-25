@@ -34,12 +34,19 @@ export const productDetailPagesQuery = `
               id
               handle
               title
+              vendor
               description
               availableForSale
               variants(first: 1) {
                 nodes {
                   id
+                  title
+                  sku
                   availableForSale
+                  price {
+                    amount
+                    currencyCode
+                  }
                 }
               }
               productType

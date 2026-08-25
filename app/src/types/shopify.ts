@@ -74,10 +74,17 @@ export interface ShopifyProductNode {
   variants: {
     nodes: Array<{
       id: string;
+      title: string;
+      sku: string | null;
       availableForSale: boolean;
+      price: {
+        amount: string;
+        currencyCode: string;
+      };
     }>;
   };
   title: string;
+  vendor: string;
   description: string;
   availableForSale: boolean;
   productType: string;

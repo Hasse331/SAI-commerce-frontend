@@ -42,6 +42,16 @@ export function mapStorefrontProductToListItem(
       overrideSpecs && overrideSpecs.length > 0
         ? overrideSpecs
         : mapProductCardSpecs(product.cardSpecsMetafield?.reference?.fields),
+    analytics: defaultVariant
+      ? {
+          productId: product.id,
+          variantId: defaultVariant.id,
+          vendor: product.vendor,
+          variantTitle: defaultVariant.title,
+          price: defaultVariant.price.amount,
+          sku: defaultVariant.sku,
+        }
+      : undefined,
   };
 }
 

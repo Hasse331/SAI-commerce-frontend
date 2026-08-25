@@ -35,6 +35,14 @@ export interface ProductSummary {
   price: string;
   priceSubtitle: string;
   specs: ProductSpecItem[];
+  analytics?: {
+    productId: string;
+    variantId: string;
+    vendor: string;
+    variantTitle: string;
+    price: string;
+    sku: string | null;
+  };
 }
 
 export interface ProductsTextContentBlockData {

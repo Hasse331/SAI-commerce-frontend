@@ -9,12 +9,18 @@ const defaultVariantSelection = `
               variants(first: 1) {
                 nodes {
                   id
+                  title
+                  sku
                   availableForSale
+                  price {
+                    amount
+                    currencyCode
+                  }
                 }
               }`;
 
 const defaultVariantSelectionPattern =
-  /variants\(first: 1\)\s*{\s*nodes\s*{\s*id\s*availableForSale\s*}\s*}/;
+  /variants\(first: 1\)\s*{\s*nodes\s*{\s*id\s*title\s*sku\s*availableForSale\s*price\s*{\s*amount\s*currencyCode\s*}\s*}\s*}/;
 
 function getSelectionSet(query: string, marker: string): string {
   const markerIndex = query.indexOf(marker);
@@ -119,6 +125,7 @@ function makeShopifyProduct(
     id: "gid://shopify/Product/1",
     handle: "test-product",
     title: "Test product",
+    vendor: "Test vendor",
     description: "",
     availableForSale: true,
     productType: "Test type",
@@ -144,7 +151,10 @@ test("maps the first available variant as purchasable merchandise", () => {
       nodes: [
         {
           id: "gid://shopify/ProductVariant/101",
+          title: "Default Title",
+          sku: "TEST-1",
           availableForSale: true,
+          price: { amount: "149.95", currencyCode: "USD" },
         },
       ],
     },
@@ -154,6 +164,14 @@ test("maps the first available variant as purchasable merchandise", () => {
     mapStorefrontProductToListItem(product).merchandiseId,
     "gid://shopify/ProductVariant/101",
   );
+  assert.deepEqual(mapStorefrontProductToListItem(product).analytics, {
+    productId: "gid://shopify/Product/1",
+    variantId: "gid://shopify/ProductVariant/101",
+    vendor: "Test vendor",
+    variantTitle: "Default Title",
+    price: "149.95",
+    sku: "TEST-1",
+  });
 });
 
 test("omits merchandise when the default variant is unavailable", () => {
@@ -162,7 +180,10 @@ test("omits merchandise when the default variant is unavailable", () => {
       nodes: [
         {
           id: "gid://shopify/ProductVariant/101",
+          title: "Default Title",
+          sku: null,
           availableForSale: false,
+          price: { amount: "0", currencyCode: "USD" },
         },
       ],
     },
@@ -177,11 +198,17 @@ test("does not select a later variant when the default variant is unavailable", 
       nodes: [
         {
           id: "gid://shopify/ProductVariant/101",
+          title: "Default Title",
+          sku: null,
           availableForSale: false,
+          price: { amount: "0", currencyCode: "USD" },
         },
         {
           id: "gid://shopify/ProductVariant/102",
+          title: "Second",
+          sku: null,
           availableForSale: true,
+          price: { amount: "0", currencyCode: "USD" },
         },
       ],
     },

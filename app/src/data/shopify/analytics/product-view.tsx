@@ -2,19 +2,22 @@
 
 import { useEffect } from "react";
 import type { ProductSummary } from "@/types/products";
-import { announceProductView } from "./events";
+import { announceProductView, clearProductView } from "./events";
 
 export function ShopifyProductView({ product }: { product: ProductSummary }) {
   useEffect(() => {
-    if (!product.merchandiseId) return;
+    if (!product.analytics) return;
     announceProductView({
-      slug: product.slug,
-      merchandiseId: product.merchandiseId,
+      productId: product.analytics.productId,
+      variantId: product.analytics.variantId,
       title: product.title,
-      price: product.price.replaceAll(",", ""),
-      vendor: "Spectrum Audio Instruments",
+      price: product.analytics.price,
+      vendor: product.analytics.vendor,
+      variantTitle: product.analytics.variantTitle,
       quantity: 1,
+      sku: product.analytics.sku,
     });
+    return clearProductView;
   }, [product]);
   return null;
 }
