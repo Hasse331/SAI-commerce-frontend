@@ -1,5 +1,6 @@
 import type { ProductViewPayload } from "@shopify/hydrogen";
 import type { ConsentCategories } from "@/lib/consent";
+import type { ShopifyPrivacyConfig } from "./config";
 
 export type ShopifyPrivacyState = {
   consentStatus?: "pending" | "loaded";
@@ -17,12 +18,17 @@ export type NormalizedAnalyticsProduct = {
   sku: string | null;
 };
 
-export function mapConsentToShopify(categories: ConsentCategories) {
+export function mapConsentToShopify(
+  categories: ConsentCategories,
+  privacy: ShopifyPrivacyConfig,
+) {
   return {
     analytics: categories.analytics,
     preferences: categories.preferences,
     marketing: categories.marketing,
     sale_of_data: false,
+    headlessStorefront: true,
+    ...privacy,
   } as const;
 }
 

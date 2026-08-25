@@ -108,7 +108,7 @@ export default async function RootLayout({
     title,
     href,
   }));
-  const analyticsConfig = getShopifyAnalyticsConfig();
+  const analyticsConfig = await getShopifyAnalyticsConfig();
   const shell = (
     <Provider>
       <ConsentProvider>

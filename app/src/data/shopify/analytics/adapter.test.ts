@@ -4,8 +4,24 @@ import { consentSignalAction, createBoundedCompletion, createEventDeduper, creat
 
 test("maps the app consent categories to Shopify's consent vocabulary", () => {
   assert.deepEqual(
-    mapConsentToShopify({ necessary: true, analytics: true, preferences: false, marketing: true }),
-    { analytics: true, preferences: false, marketing: true, sale_of_data: false },
+    mapConsentToShopify(
+      { necessary: true, analytics: true, preferences: false, marketing: true },
+      {
+        checkoutRootDomain: "checkout.spectrumaudio.net",
+        storefrontRootDomain: "spectrumaudio.net",
+        storefrontAccessToken: "public-storefront-token",
+      },
+    ),
+    {
+      analytics: true,
+      preferences: false,
+      marketing: true,
+      sale_of_data: false,
+      headlessStorefront: true,
+      checkoutRootDomain: "checkout.spectrumaudio.net",
+      storefrontRootDomain: "spectrumaudio.net",
+      storefrontAccessToken: "public-storefront-token",
+    },
   );
 });
 

@@ -23,6 +23,7 @@ function publishProduct(payload: ProductViewPayload): void {
 }
 
 export function ShopifyAnalyticsRuntime({ config }: { config: ShopifyAnalyticsConfig }) {
+  const privacyConfig = config.privacy;
   const pathname = usePathname();
   const localAnalyticsGranted = useRef(false);
   const deduper = useRef(createEventDeduper());
@@ -87,7 +88,7 @@ export function ShopifyAnalyticsRuntime({ config }: { config: ShopifyAnalyticsCo
           },
         );
         try {
-          privacy!.setTrackingConsent(mapConsentToShopify(decision.categories), (result) => {
+          privacy!.setTrackingConsent(mapConsentToShopify(decision.categories, privacyConfig), (result) => {
             const succeeded = !result?.error;
             if (completion.complete(succeeded) && succeeded) {
               clearReadinessTimer();
@@ -157,11 +158,18 @@ export function ShopifyAnalyticsRuntime({ config }: { config: ShopifyAnalyticsCo
       consentScript?.removeEventListener("load", onPrivacyReadySignal);
       document.removeEventListener("visitorConsentCollected", onPrivacyReadySignal);
     };
-  }, [publishCurrentPage, publishCurrentProduct]);
+  }, [privacyConfig, publishCurrentPage, publishCurrentProduct]);
 
   useEffect(() => {
     publishCurrentPage();
   }, [publishCurrentPage]);
 
-  return <ShopifyScripts shop={config} analytics={{ channel: "hydrogen" }} consent={{ mode: "custom-banner" }} webMcp={false} />;
+  return (
+    <ShopifyScripts
+      shop={{ ...config.shop, storefrontId: "" }}
+      analytics={{ channel: "headless" }}
+      consent={{ mode: "custom-banner" }}
+      webMcp={false}
+    />
+  );
 }
