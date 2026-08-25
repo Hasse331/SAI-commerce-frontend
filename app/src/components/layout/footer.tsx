@@ -11,6 +11,7 @@ import type { BrandData } from "@/types/brand";
 import { footerLabels } from "@/data/contents/footer-labels";
 import { getFooterData } from "@/data/loaders/footer";
 import Link from "next/link";
+import { CookieSettingsButton } from "@/components/consent/cookie-settings-button";
 
 interface FooterProps {
   brand: BrandData;
@@ -80,6 +81,7 @@ export default async function Footer({ brand }: FooterProps) {
             <Text textAlign="center">
               © Copyright {new Date().getFullYear()} {brand.name}
             </Text>
+            <CookieSettingsButton />
           </Stack>
         </Container>
       </Flex>

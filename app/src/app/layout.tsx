@@ -15,6 +15,7 @@ import { buildPageTitle, getMetadataBase, isProductionSite } from "@/lib/seo";
 import type { PolicyLink } from "@/types/policies";
 import { getShopifyAnalyticsConfig } from "@/data/shopify/analytics/config";
 import { ShopifyAnalyticsRuntime } from "@/data/shopify/analytics/runtime";
+import { ConsentProvider } from "@/components/consent/consent-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -110,7 +111,8 @@ export default async function RootLayout({
   const analyticsConfig = getShopifyAnalyticsConfig();
   const shell = (
     <Provider>
-      <Box
+      <ConsentProvider>
+        <Box
         maxW={themeTokens.layoutWidth}
         mx="auto"
         w="full"
@@ -128,7 +130,8 @@ export default async function RootLayout({
           <Footer brand={brand} />
           <CartSidebar />
         </CartProvider>
-      </Box>
+        </Box>
+      </ConsentProvider>
     </Provider>
   );
 
