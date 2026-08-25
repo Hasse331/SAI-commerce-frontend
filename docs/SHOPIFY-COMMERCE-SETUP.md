@@ -52,8 +52,6 @@ NEXT_PUBLIC_DATA_SOURCE=shopify
 SHOPIFY_STORE_DOMAIN=
 SHOPIFY_STOREFRONT_PUBLIC_TOKEN=
 SHOPIFY_STOREFRONT_API_VERSION=2026-01
-SHOPIFY_SHOP_ID=
-SHOPIFY_STOREFRONT_ID=
 ```
 
 `SHOPIFY_STORE_DOMAIN` is the Shopify store domain in the form
@@ -86,38 +84,31 @@ Redeploy after changing any server environment variable.
 
 ## Shopify Analytics and customer privacy
 
-The storefront uses Shopify's framework-independent Hydrogen toolkit for
-Shopify Analytics and Customer Privacy. It does not use the Hydrogen framework,
-Oxygen, Google Analytics, Tag Manager, Meta Pixel, or another third-party
-tracker.
+The storefront uses Shopify's current storefront analytics runtime in
+`headless` mode and Shopify's Customer Privacy API. The package that supplies
+the runtime is not used as the application framework: this remains a Next.js
+application and does not use Hydrogen routing, Oxygen, Google Analytics, Tag
+Manager, Meta Pixel, or another third-party tracker.
 
-Set these analytics identity values in Preview and Production in addition to
-`SHOPIFY_STORE_DOMAIN`:
-
-```env
-SHOPIFY_SHOP_ID=
-SHOPIFY_STOREFRONT_ID=
-SHOPIFY_STORE_DOMAIN=your-store.myshopify.com
-```
-
-Use the numeric Shopify shop ID and the storefront ID belonging to the active
-storefront in **Sales channels > Headless**. These variables are intentionally
-not named `NEXT_PUBLIC_*`: Next.js reads them in the server layout and passes
-only the public storefront identity and domain into Shopify's browser runtime.
-No Admin API access token, private Storefront token, or additional analytics
-token is used. When any of the three values is absent, the runtime is omitted
-and analytics remains disabled.
+Analytics requires no additional environment variables. Do not add a shop ID,
+storefront ID, Customer Account API credential, Admin API token, private
+Storefront token, or separate analytics token. On startup, the server uses the
+existing public Storefront API connection to query Shopify's shop GID and
+configured primary host. The public Storefront token is then passed only to
+Shopify's browser Customer Privacy API, as Shopify requires for custom
+storefront consent synchronization.
 
 In Shopify Admin:
 
-1. Open **Sales channels > Headless**, select the storefront used by this
-   deployment, and verify that it is the storefront represented by
-   `SHOPIFY_STOREFRONT_ID`.
+1. Confirm the public Storefront token belongs to the Headless storefront used
+   by this deployment.
 2. Configure the production storefront and Shopify checkout domains so they
    share the same registrable root
    domain (for example, `www.example.com` and `checkout.example.com`). Shopify's
    consent and analytics cookies cannot be validated reliably across unrelated
-   registrable domains.
+   registrable domains. This implementation accepts Shopify's queried primary
+   host as the checkout host only when it is the storefront root or exactly
+   `checkout.<storefront-root>`; other shapes fail closed and omit analytics.
 3. Review Shopify's **Settings > Customer privacy** configuration, including
    the applicable regions and data-sale/opt-out settings. The custom storefront
    banner is shown to every new visitor, regardless of Shopify's regional
@@ -170,21 +161,20 @@ against the deployed domain.
 
 - No banner: clear `sai_consent`, verify cookies are permitted, and check that
   the browser is not retaining a current 180-day decision.
-- No Live View activity after opt-in: verify all three identity/domain values,
-  redeploy, confirm the Headless storefront ID and same registrable domain,
-  inspect Shopify Customer Privacy settings, and test without content blockers.
+- No Live View activity after opt-in: verify `NEXT_PUBLIC_SITE_URL`,
+  `SHOPIFY_STORE_DOMAIN`, `SHOPIFY_STOREFRONT_PUBLIC_TOKEN`, and
+  `SHOPIFY_STOREFRONT_API_VERSION`; redeploy; confirm the storefront and
+  checkout share the accepted root-domain arrangement; inspect Shopify Customer
+  Privacy settings; and test without content blockers.
 - Events before consent or after opt-out: stop the release and roll back to the
   previous known-good commit; do not weaken either consent gate.
 - Duplicate events: reproduce with one navigation and one product visit and
   stop release until deduplication is restored.
 
-For a configuration-only emergency rollback, remove or blank
-`SHOPIFY_SHOP_ID` or `SHOPIFY_STOREFRONT_ID` in the deployment environment and
-redeploy. The server then omits Shopify's analytics/privacy runtime, leaving
-analytics off while necessary storefront and cart behavior remains available.
-Restore the values only after Preview checks pass. A code rollback should deploy
-the previous known-good commit; never expose the HttpOnly cart ID or introduce a
-third-party pixel as a workaround.
+For an emergency rollback, deploy the previous known-good commit. Do not blank
+the existing Storefront API values because products, cart, checkout, privacy
+synchronization, and analytics share that connection. Never expose the HttpOnly
+cart ID or introduce a third-party pixel as a workaround.
 
 Before release, run from `app/`:
 
