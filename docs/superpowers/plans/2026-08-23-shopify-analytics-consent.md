@@ -44,7 +44,10 @@
 
 - [ ] Lock the current Shopify toolkit preview package compatible with React 19 and Next.js.
 - [ ] Write failing tests for consent mapping, fail-closed readiness, supported event mapping, and deduplication.
-- [ ] Implement Customer Privacy synchronization and consent-gated page, product, add-to-cart, and cart-update publishing.
+- [ ] Implement Customer Privacy synchronization and consent-gated page and
+  product publishing. Defer add-to-cart/cart-update events because the typed
+  toolkit payload requires exposing the root cart ID, conflicting with the
+  storefront's binding HttpOnly cart-secret boundary.
 - [ ] Add only the public storefront identity/domain configuration required by Shopify and document runtime validation limits.
 - [ ] Run focused tests, full unit tests, lint, and build.
 - [ ] Commit `feat(analytics): add consent-gated shopify analytics`.
@@ -67,3 +70,7 @@
 - [ ] Run `npm run lint`, `npm test`, and `npm run build` from `app/`.
 - [ ] Inspect the complete diff and commit only documentation as `docs: add shopify analytics release guide`.
 
+**Working-tree status (2026-08-23):** Implementation and merchant documentation
+are present. Production-domain Shopify Live View validation and any
+network-dependent build validation remain outstanding release checks; this
+status does not claim cart or add-to-cart analytics support.

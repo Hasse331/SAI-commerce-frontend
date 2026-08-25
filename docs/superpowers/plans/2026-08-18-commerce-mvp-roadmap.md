@@ -46,6 +46,10 @@ policy route and link presentation.
 
 ## Phase 3: Consent controls
 
+**Status (2026-08-23):** Implemented in the working tree. Local lint and tests
+can be completed locally; the production build's network-dependent validation
+and production-domain Shopify Live View acceptance remain release gates.
+
 Create a detailed consent plan after the active analytics/pixel inventory is
 confirmed.
 
@@ -59,6 +63,11 @@ Deliverables:
 
 Primary context: compliance agent. A storefront agent may own the dialog UI
 against an accepted consent interface.
+
+Implemented scope publishes consent-gated Shopify page-view and product-view
+events only. Cart and add-to-cart events remain deferred because publishing
+them through the current browser toolkit would expose the root Shopify cart ID
+and violate the HttpOnly cart-session boundary.
 
 ## Phase 4: Release verification and thicker tests
 
@@ -82,4 +91,3 @@ No implementation begins in the commerce MVP. Keep the production feature
 disabled and preserve the requirements in `docs/BACKLOG.md`. Create a new
 design and plan only after the merchant supplies the required imagery,
 configuration rules, availability rules, and pricing ownership.
-

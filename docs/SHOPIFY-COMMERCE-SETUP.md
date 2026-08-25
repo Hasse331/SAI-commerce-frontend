@@ -52,6 +52,8 @@ NEXT_PUBLIC_DATA_SOURCE=shopify
 SHOPIFY_STORE_DOMAIN=
 SHOPIFY_STOREFRONT_PUBLIC_TOKEN=
 SHOPIFY_STOREFRONT_API_VERSION=2026-01
+SHOPIFY_SHOP_ID=
+SHOPIFY_STOREFRONT_ID=
 ```
 
 `SHOPIFY_STORE_DOMAIN` is the Shopify store domain in the form
@@ -81,6 +83,120 @@ Variables** and select the correct target. Put test-store/test-token values in
 **Preview** and live-store/live-token values in **Production**; do not promote a
 preview configuration to production without a live checkout acceptance test.
 Redeploy after changing any server environment variable.
+
+## Shopify Analytics and customer privacy
+
+The storefront uses Shopify's framework-independent Hydrogen toolkit for
+Shopify Analytics and Customer Privacy. It does not use the Hydrogen framework,
+Oxygen, Google Analytics, Tag Manager, Meta Pixel, or another third-party
+tracker.
+
+Set these analytics identity values in Preview and Production in addition to
+`SHOPIFY_STORE_DOMAIN`:
+
+```env
+SHOPIFY_SHOP_ID=
+SHOPIFY_STOREFRONT_ID=
+SHOPIFY_STORE_DOMAIN=your-store.myshopify.com
+```
+
+Use the numeric Shopify shop ID and the storefront ID belonging to the active
+storefront in **Sales channels > Headless**. These variables are intentionally
+not named `NEXT_PUBLIC_*`: Next.js reads them in the server layout and passes
+only the public storefront identity and domain into Shopify's browser runtime.
+No Admin API access token, private Storefront token, or additional analytics
+token is used. When any of the three values is absent, the runtime is omitted
+and analytics remains disabled.
+
+In Shopify Admin:
+
+1. Open **Sales channels > Headless**, select the storefront used by this
+   deployment, and verify that it is the storefront represented by
+   `SHOPIFY_STOREFRONT_ID`.
+2. Configure the production storefront and Shopify checkout domains so they
+   share the same registrable root
+   domain (for example, `www.example.com` and `checkout.example.com`). Shopify's
+   consent and analytics cookies cannot be validated reliably across unrelated
+   registrable domains.
+3. Review Shopify's **Settings > Customer privacy** configuration, including
+   the applicable regions and data-sale/opt-out settings. The custom storefront
+   banner is shown to every new visitor, regardless of Shopify's regional
+   requirement result, and synchronizes an explicit decision through Shopify's
+   Customer Privacy API.
+4. Redeploy after changing identity or domain configuration. Do not validate a
+   production analytics release solely on localhost.
+
+The custom banner has Necessary, Analytics, Preferences, and Marketing
+categories. Necessary is always enabled. All optional categories default to
+disabled. Visitors can accept all, reject optional categories, customize and
+save, and reopen settings from the footer. The versioned first-party
+`sai_consent` cookie persists a valid decision for 180 days. Missing, malformed,
+expired, or obsolete consent reopens the banner and keeps optional processing
+off. Preferences and Marketing currently have no script consumers.
+
+Shopify Analytics publishes only page-view and product-view events after both
+the local Analytics choice and Shopify's effective Customer Privacy state allow
+processing. Add-to-cart and cart-update analytics are not implemented: the
+current toolkit requires the root Shopify cart ID in its browser payload, while
+this storefront deliberately keeps that secret in the HttpOnly `sai_cart_id`
+session. Do not expose, copy, hash, or fabricate that ID to add those events.
+
+### Production Live View acceptance
+
+Use the deployed production domain (or a production-equivalent domain with the
+same registrable-domain arrangement), and avoid recording visitor identifiers
+or cookie contents in evidence:
+
+1. Clear the site's consent cookie or use a fresh browser profile. Confirm the
+   banner appears and no Shopify page/product analytics is emitted before a
+   choice.
+2. Choose **Reject optional**, navigate between pages and open a product.
+   Confirm the footer can reopen settings and Shopify Analytics remains quiet.
+3. Reopen settings, enable **Analytics**, and save. Confirm the decision
+   persists across reloads and Shopify's Customer Privacy state permits
+   analytics processing.
+4. In Shopify Admin's Analytics **Live View**, open distinct storefront pages
+   and a product on the deployed domain. Confirm page and product activity
+   appears once per navigation/view after normal processing delay.
+5. Disable Analytics again and confirm subsequent navigation/product views are
+   not published. Also verify Accept all, Reject optional, Customize, Escape,
+   keyboard focus, and the footer reopen interaction.
+
+Do not claim acceptance based on localhost, unit-test event mocks, or cart/add
+events. Live View delivery depends on Shopify configuration and must be observed
+against the deployed domain.
+
+### Analytics troubleshooting and rollback
+
+- No banner: clear `sai_consent`, verify cookies are permitted, and check that
+  the browser is not retaining a current 180-day decision.
+- No Live View activity after opt-in: verify all three identity/domain values,
+  redeploy, confirm the Headless storefront ID and same registrable domain,
+  inspect Shopify Customer Privacy settings, and test without content blockers.
+- Events before consent or after opt-out: stop the release and roll back to the
+  previous known-good commit; do not weaken either consent gate.
+- Duplicate events: reproduce with one navigation and one product visit and
+  stop release until deduplication is restored.
+
+For a configuration-only emergency rollback, remove or blank
+`SHOPIFY_SHOP_ID` or `SHOPIFY_STOREFRONT_ID` in the deployment environment and
+redeploy. The server then omits Shopify's analytics/privacy runtime, leaving
+analytics off while necessary storefront and cart behavior remains available.
+Restore the values only after Preview checks pass. A code rollback should deploy
+the previous known-good commit; never expose the HttpOnly cart ID or introduce a
+third-party pixel as a workaround.
+
+Before release, run from `app/`:
+
+```bash
+npm run lint
+npm test
+npm run build
+```
+
+All commands must pass, followed by the production-domain consent and Live View
+acceptance above. A build blocked by package/CDN network access remains
+outstanding rather than being treated as a successful release check.
 
 ## Store policies
 
@@ -187,4 +303,6 @@ as a recovery measure.
 
 ## Scope boundary
 
-Cookie-consent controls remain explicitly planned for Phase 3.
+Phase 3 covers Shopify Customer Privacy synchronization and consent-gated page
+and product analytics. Cart/add analytics and all third-party analytics remain
+out of scope.

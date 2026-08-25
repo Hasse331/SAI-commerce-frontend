@@ -40,7 +40,15 @@ NEXT_PUBLIC_SITE_URL=https://your-production-domain.com
 SHOPIFY_STORE_DOMAIN=
 SHOPIFY_STOREFRONT_API_VERSION=
 SHOPIFY_STOREFRONT_PUBLIC_TOKEN=
+SHOPIFY_SHOP_ID=
+SHOPIFY_STOREFRONT_ID=
 ```
+
+`SHOPIFY_SHOP_ID` and `SHOPIFY_STOREFRONT_ID` enable Shopify Analytics and
+Customer Privacy. They are read on the server and passed to Shopify's public
+browser runtime; no Admin API token or private Storefront token is required for
+analytics. If either identity value or `SHOPIFY_STORE_DOMAIN` is missing, the
+analytics runtime is not rendered and optional analytics stays off.
 
 For Headless channel setup, Storefront API configuration, deployment values,
 checkout acceptance, and credential rotation, read

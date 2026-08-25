@@ -41,6 +41,22 @@ the buyer to the exact `checkoutUrl` returned by Shopify.
 - `app/src/data/fallback/` contains intentional production-safe fallbacks.
 - `app/src/data/mock/` is limited to mock mode and tests.
 
+## Analytics and privacy boundary
+
+- The existing Next.js storefront uses Shopify's framework-independent
+  Hydrogen toolkit runtime; Hydrogen framework and Oxygen are not part of the
+  application architecture.
+- The application owns the four-category consent decision and keeps analytics,
+  preferences, and marketing disabled until the visitor chooses otherwise.
+- Shopify Customer Privacy is the effective second gate for Shopify Analytics.
+  A missing configuration, unavailable privacy API, or failed synchronization
+  fails closed without interrupting necessary commerce.
+- Only page-view and product-view events are currently published. Add-to-cart
+  and cart-update analytics are deliberately deferred: the toolkit's browser
+  payload requires the Shopify root cart ID, which this application keeps only
+  in its HttpOnly server session.
+- No third-party analytics or marketing pixel is installed.
+
 See `docs/DATA-LAYER.md` for detailed data-layer rules.
 
 ## Active delivery scope

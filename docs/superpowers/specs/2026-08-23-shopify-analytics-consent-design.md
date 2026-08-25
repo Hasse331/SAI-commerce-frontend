@@ -16,7 +16,10 @@ third-party analytics or marketing pixels are installed.
 - Use Shopify's current framework-independent Hydrogen toolkit integration for
   Shopify analytics and customer privacy. Do not restore the historical
   Hydrogen framework or Oxygen.
-- Publish page, product, add-to-cart, and cart-update analytics events.
+- Publish page and product analytics events. Add-to-cart and cart-update events
+  are deferred because the preview toolkit requires the Shopify root cart ID
+  in its typed browser payload, while this storefront intentionally keeps that
+  cart secret in an HttpOnly server session.
 - Remove FixLoop and its storefront dependency completely.
 
 ## Consent contract
@@ -56,8 +59,9 @@ headings and native controls.
   changes.
 - Send product-view data from normalized application product data, never raw
   Shopify GraphQL responses.
-- Send add-to-cart and cart-update data from successful normalized cart state
-  transitions only.
+- Do not publish add-to-cart or cart-update events until Shopify provides a
+  typed contract that does not expose the root cart ID, or a supported
+  server-side publication path becomes available. Never fabricate an ID.
 - Do not emit duplicate events for React renders, failed cart requests, or
   pre-consent activity.
 
@@ -68,9 +72,15 @@ and checkout root domains required by the current toolkit. Storefront and
 checkout must share the registrable root domain for Shopify consent and
 analytics cookies. Merchant validation must confirm the Headless/Hydrogen
 storefront configuration and observe production-domain events in Shopify Live
-View; localhost is not sufficient for add-to-cart validation.
+View; localhost is not sufficient for final analytics validation.
+
+The preview Customer Privacy runtime has no typed dedicated readiness
+subscription. The adapter listens for the consent script load and
+`visitorConsentCollected`, with a bounded five-second poll after an explicit
+choice. Hydrating a persisted local decision never calls
+`setTrackingConsent`; it only updates the local gate, which still requires
+Shopify's already-effective privacy state to allow analytics.
 
 Unit tests cover schema parsing, expiry/version handling, reducer transitions,
 gate decisions, Shopify consent mapping, and event deduplication. Final local
 verification runs `npm run lint`, `npm test`, and `npm run build` from `app/`.
-
