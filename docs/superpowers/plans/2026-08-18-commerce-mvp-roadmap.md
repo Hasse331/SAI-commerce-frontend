@@ -46,9 +46,9 @@ policy route and link presentation.
 
 ## Phase 3: Consent controls
 
-**Status (2026-08-23):** Implemented in the working tree. Local lint and tests
-can be completed locally; the production build's network-dependent validation
-and production-domain Shopify Live View acceptance remain release gates.
+**Status (2026-08-25):** Implemented and committed. Unit tests, lint,
+TypeScript, and the production build pass locally. Production-domain Shopify
+Live View acceptance remains a merchant release gate.
 
 Create a detailed consent plan after the active analytics/pixel inventory is
 confirmed.

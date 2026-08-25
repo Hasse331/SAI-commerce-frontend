@@ -66,11 +66,11 @@
 
 **Files:** `README.md`, `docs/SHOPIFY-COMMERCE-SETUP.md`, and Phase 3 roadmap/status documentation.
 
-- [ ] Document environment values, domains, Shopify Admin configuration, consent checks, Live View validation, and rollback.
-- [ ] Run `npm run lint`, `npm test`, and `npm run build` from `app/`.
-- [ ] Inspect the complete diff and commit only documentation as `docs: add shopify analytics release guide`.
+- [x] Document environment values, domains, Shopify Admin configuration, consent checks, Live View validation, and rollback.
+- [x] Run `npm run lint`, `npm test`, and `npm run build` from `app/`.
+- [x] Inspect the complete diff and commit only documentation as `docs: add shopify analytics release guide`.
 
-**Working-tree status (2026-08-23):** Implementation and merchant documentation
-are present. Production-domain Shopify Live View validation and any
-network-dependent build validation remain outstanding release checks; this
-status does not claim cart or add-to-cart analytics support.
+**Status (2026-08-25):** Implementation and merchant documentation are
+committed. Unit tests, lint, TypeScript, and the production build pass locally.
+Production-domain Shopify Live View validation remains outstanding; this status
+does not claim cart or add-to-cart analytics support.
